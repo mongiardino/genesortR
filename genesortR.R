@@ -110,7 +110,7 @@ inv = function(x) {
   return(invariant)
 }
 
-#function to not consider entirely empty positions in metrics
+#function to remove missing data from the estimation of RCFV
 remove_empty = function(x) {
   if('-' %in% names(unlist(x))) {
     missing = which(names(unlist(x)) == '-')
