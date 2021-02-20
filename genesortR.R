@@ -1,14 +1,6 @@
 #Property-based phylogenomic subsampling
 #Writen by Nicolas Mongiardino Koch 02/2021
 
-#Mongiardino Koch & Thompson (2020) - A Total-Evidence Dated Phylogeny of
-#Echinoidea Combining Phylogenomic and Paleontological Data. Syst. Biol.
-#syaa069, https://doi.org/10.1093/sysbio/syaa069
-
-#Nicolás Mongiardino Koch (2021) - Phylogenomic subsampling and the search for
-#phylogenetically reliable loci. bioRxiv 2021.02.13.431075.
-#https://doi.org/10.1101/2021.02.13.431075
-
 #This script requires an alignment in FASTA format, a partition file in format
 #'geneX = 1-200', a species tree considered the best estimate of the true tree
 #(e.g., as obtained using concatenation or coalescent methods using the full
@@ -19,6 +11,15 @@
 
 #Parameters needing input are marked with 'INPUT' and are all in the second
 #section called 'Parameters'
+
+#More details can be found in the following publications:
+#1) Mongiardino Koch & Thompson (2020) - A Total-Evidence Dated Phylogeny of
+#Echinoidea Combining Phylogenomic and Paleontological Data. Syst. Biol.
+#syaa069, https://doi.org/10.1093/sysbio/syaa069
+
+#2) Mongiardino Koch (2021) - Phylogenomic subsampling and the search for
+#phylogenetically reliable loci. bioRxiv 2021.02.13.431075.
+#https://doi.org/10.1101/2021.02.13.431075
 
 #Installation-----------------------------------------------------------------------------------
 rm(list=ls())
@@ -393,7 +394,7 @@ sorted_trees = sorted_trees[1:n_genes]
 write.phyDat(as.phyDat(sorted_data), file = paste0(getwd(), '/sorted_alignment_', n_genes, 'genes.fa'), format = 'fasta')
 partitions_tosave = paste0(sorted_names, variables_sorted$genes[1:n_genes], ' = ', sorted_partitions$Start, '-', sorted_partitions$End)
 write(partitions_tosave, file = paste0(getwd(), '/sorted_alignment_', n_genes, 'genes.txt'))
-write.tree(sorted_trees)
+write.tree(sorted_trees, file = paste0(getwd(), '/sorted_trees_', n_genes, 'genes.txt'))
 
 #Optional: visualize some sorting results-------------------------------------------------------------------------------------------------
 variables_to_plot = data.frame(gene = rep(variables_sorted$genes, ncol(PCA$loadings)),
