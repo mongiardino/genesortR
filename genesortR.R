@@ -12,10 +12,10 @@
 #Parameters needing input are marked with 'INPUT' and are all in the second
 #section called 'Parameters'
 
-##POSSIBLE INPUT: if you would like to sort based on any other estimated!!!!!!!!!!!!!!!!!!!!!!!!!!!
-##property this can be done at this stage by modifying the column e.g.
-#variables_sorted = variables[order(variables[,'occupancy'], decreasing = T),]
-#will leave the genes with highest occupancy at the top of the variables matrix
+#More gene properties than the ones used to infer a usefulness axis are
+#inferred. If you would like to sort and subsample based on any of these (such
+#as occupancy for example) go to heading 'D) Sort & Subsample and modify the
+#lines after 'WARNING'
 
 #More details can be found in the following publications:
 #1) Mongiardino Koch & Thompson (2020) - A Total-Evidence Dated Phylogeny of
@@ -26,37 +26,7 @@
 #phylogenetically reliable loci. bioRxiv 2021.02.13.431075.
 #https://doi.org/10.1101/2021.02.13.431075
 
-#Installation-----------------------------------------------------------------------------------
-rm(list=ls())
-`%not in%` <- function(x, table) is.na(match(x, table, nomatch=NA_integer_))
-#function to count invariant sites
-inv <- function(x) {
-  pattern <- unique(x)
-  if(any(pattern %in% c('?'))) pattern <- pattern[-which(pattern == '?')]
-  if(any(pattern %in% c('-'))) pattern <- pattern[-which(pattern == '-')]
-  
-  if(length(pattern) == 1) {
-    invariant <- T
-  } else {
-    invariant <- F
-  }
-  return(invariant)
-}
-
-#function to remove missing data from the estimation of RCFV
-remove_empty <- function(x) {
-  if('-' %in% names(unlist(x))) {
-    missing = which(names(unlist(x)) == '-')
-    x <- x[-missing]
-  }
-  if('?' %in% names(unlist(x))) {
-    missing <- which(names(unlist(x)) == '?')
-    x <- x[-missing]
-  }
-  return(x)
-}
-
-#install required packages
+#Install and load packages-------------------------------------------------------------------------
 packages <- c('ape','phytools','phangorn','tibble','dplyr','tidyr','adephylo','ggplot2')
 new_packages <- packages[!packages %in% installed.packages()[,'Package']]
 if(length(new_packages)) { install.packages(new_packages) }
@@ -71,7 +41,6 @@ library(adephylo)
 library(ggplot2)
 
 #Parameters-----------------------------------------------------------------------------------------
-
 #INPUT: set working directory to folder containing these four files
 setwd('')
 
@@ -127,7 +96,7 @@ IG <- Descendants(species_tree, node, type = 'tips')
 IG <- species_tree$tip.label[unlist(IG)]
 OG <- species_tree$tip.label[species_tree$tip.label %not in% IG]
 
-#B) Estimate properties
+#B) Estimate properties-------------------------------------------------------------------------------
 root_tip_var <- saturation <- missing <- av_patristic <- length <- tree_length <- occupancy <- variable_sites <- RCFV <- 
   rate <- average_BS_support <- robinson_sim <- vector(length = length(gene_trees))
 
@@ -285,7 +254,7 @@ variables$PC_1 <- scores1
 variables$PC_2 <- scores2
 if(any(is.na(variables))) variables <- variables[which(complete.cases(variables)),]
 
-#C) Attempt to find usefulness axis automatically
+#C) Attempt to find usefulness axis automatically----------------------------------------------------
 
 #if correlation between PC1 and rate is high
 if(cor.test(variables$rate, variables$PC_1)$estimate > 0.7) { 
@@ -338,7 +307,7 @@ if(PC_rate != 'unknown') {
   direction <- 'unclear'
 }
 
-#D) Sort & Subsample
+#D) Sort & Subsample------------------------------------------------------------------------------
 if(direction == 'unclear') {
   cat('It is unclear how to sort the data.', '\n', 'You can the check loadings and decide manually how to proceed.', '\n',  
       'It is also possible that this approach might not be suitable for your dataset.', '\n', 
@@ -356,6 +325,11 @@ if(direction == 'clear') {
   #sort by usefulness
   variables_sorted <- variables[order(variables[,usefulness_col], decreasing = descending),]
 }
+
+###WARNING: uncomment and omdify the following lines if you would like to sort
+###and subsample by a different property, for example occupancy or RF similarity
+#variables_sorted = variables[order(variables[,'occupancy'], decreasing = T),]
+#variables_sorted = variables[order(variables[,'robinson_sim'], decreasing = T),]
 
 #sort entire dataset according to the sorting order imposed
 positions = c()
@@ -410,4 +384,33 @@ if(nrow(partitions) == nrow(sorted_partitions)) {
     geom_smooth() + theme_bw() + theme(legend.position = "none") + 
     facet_wrap(vars(factor(property, levels = order_properties)), scales = 'free', nrow = 2) +
     geom_vline(xintercept = n_genes, linetype = 'dashed')
+}
+
+#Other funtions-----------------------------------------------------------------------------------
+`%not in%` <- function(x, table) is.na(match(x, table, nomatch=NA_integer_))
+#function to count invariant sites
+inv <- function(x) {
+  pattern <- unique(x)
+  if(any(pattern %in% c('?'))) pattern <- pattern[-which(pattern == '?')]
+  if(any(pattern %in% c('-'))) pattern <- pattern[-which(pattern == '-')]
+  
+  if(length(pattern) == 1) {
+    invariant <- T
+  } else {
+    invariant <- F
+  }
+  return(invariant)
+}
+
+#function to remove missing data from the estimation of RCFV
+remove_empty <- function(x) {
+  if('-' %in% names(unlist(x))) {
+    missing = which(names(unlist(x)) == '-')
+    x <- x[-missing]
+  }
+  if('?' %in% names(unlist(x))) {
+    missing <- which(names(unlist(x)) == '?')
+    x <- x[-missing]
+  }
+  return(x)
 }
