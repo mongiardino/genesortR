@@ -40,6 +40,35 @@ library(phytools)
 library(adephylo)
 library(ggplot2)
 
+#Some necessary functions-----------------------------------------------------------------------------------
+`%not in%` <- function(x, table) is.na(match(x, table, nomatch=NA_integer_))
+#function to count invariant sites
+inv <- function(x) {
+  pattern <- unique(x)
+  if(any(pattern %in% c('?'))) pattern <- pattern[-which(pattern == '?')]
+  if(any(pattern %in% c('-'))) pattern <- pattern[-which(pattern == '-')]
+  
+  if(length(pattern) == 1) {
+    invariant <- T
+  } else {
+    invariant <- F
+  }
+  return(invariant)
+}
+
+#function to remove missing data from the estimation of RCFV
+remove_empty <- function(x) {
+  if('-' %in% names(unlist(x))) {
+    missing = which(names(unlist(x)) == '-')
+    x <- x[-missing]
+  }
+  if('?' %in% names(unlist(x))) {
+    missing <- which(names(unlist(x)) == '?')
+    x <- x[-missing]
+  }
+  return(x)
+}
+
 #Parameters-----------------------------------------------------------------------------------------
 #INPUT: set working directory to folder containing these four files
 setwd('')
@@ -65,9 +94,8 @@ remove_outliers <- T
 outlier_fraction <- 0.01 #i.e. 1%
 
 ##INPUT: Desired number of genes to retain
-#if n_genes == 0 (i.e. if next line is not modified, then the dataset is sorted
-#and saved without subsampling)
-n_genes <- 0
+#if n_genes == 'all' then the dataset is sorted but not subsampled
+n_genes <- 'all'
 
 #A) Prepare data-------------------------------------------------------------------------------------------------------
 data <- read.phyDat(alignment, format = 'fasta', type = type)
@@ -83,10 +111,6 @@ partitions <- enframe(partitions[,ncol(partitions)], name = NULL)
 partitions <- partitions %>% separate(value, into = c('Start', 'End'), sep = '-') %>% 
   mutate_if(is.character, as.numeric)
 
-if(n_genes == 0) {
-  n_genes <- nrow(partitions)
-}
-
 gene_trees <- read.tree(gene_trees)
 species_tree <- read.tree(species_tree)
 
@@ -97,8 +121,10 @@ IG <- species_tree$tip.label[unlist(IG)]
 OG <- species_tree$tip.label[species_tree$tip.label %not in% IG]
 
 #B) Estimate properties-------------------------------------------------------------------------------
+genes <- 1:length(gene_trees)
+
 root_tip_var <- saturation <- missing <- av_patristic <- length <- tree_length <- occupancy <- variable_sites <- RCFV <- 
-  rate <- average_BS_support <- robinson_sim <- vector(length = length(gene_trees))
+  rate <- average_BS_support <- robinson_sim <- integer(length(gene_trees))
 
 for(i in 1:length(gene_trees)) {
   tree <- gene_trees[[i]]
@@ -196,7 +222,7 @@ for(i in 1:length(gene_trees)) {
 }
 
 #gather gene properties
-variables <- data.frame(genes = 1:length(gene_trees), root_tip_var, saturation, missing, rate, tree_length, 
+variables <- data.frame(genes, root_tip_var, saturation, missing, rate, tree_length, 
                         RCFV, av_patristic, length, occupancy, variable_sites, average_BS_support, robinson_sim)
 if(type == 'DNA') variables <- variables[,-which(colnames(variables) == 'RCFV')]
 
@@ -208,7 +234,12 @@ if(length(useless) > 0) {
 
 #Select gene properties for PCA (RCFV is only included if type == 'AA)
 variables_to_use <- which(colnames(variables) %in% c('root_tip_var', 'saturation', 'RCFV', 'av_patristic', 
-                                                    'variable_sites', 'average_BS_support', 'robinson_sim'))
+                                                     'variable_sites', 'average_BS_support', 'robinson_sim'))
+
+if(any(is.na(variables[,variables_to_use]))) {
+  cat('Something went wrong. Most likely the order of genes and gene trees does not match.', '\n')
+}
+
 #perform PCA
 PCA <- princomp(variables[,variables_to_use], cor = T, scores = T)
 
@@ -224,35 +255,41 @@ if(remove_outliers) {
     PCA <- princomp(variables[-outliers,variables_to_use], cor = T, scores = T)
     
     #get scores for loci along dimensions 1 and 2
-    scores1 <- PCA$scores[,1]
-    scores2 <- PCA$scores[,2]
+    PC_1 <- PCA$scores[,1]
+    PC_2 <- PCA$scores[,2]
     for(i in 1:length(outliers)) {
       if(outliers[i] == 1) {
-        scores1 <- c(NA, scores1)
-        scores2 <- c(NA, scores2)
+        PC_1 <- c(NA, PC_1)
+        PC_2 <- c(NA, PC_2)
       } else {
-        if(outliers[i] < length(scores1)) {
-          scores1 <- c(scores1[1:(outliers[i]-1)], NA, scores1[outliers[i]:length(scores1)])
-          scores2 <- c(scores2[1:(outliers[i]-1)], NA, scores2[outliers[i]:length(scores2)])
+        if(outliers[i] < length(PC_1)) {
+          PC_1 <- c(PC_1[1:(outliers[i]-1)], NA, PC_1[outliers[i]:length(PC_1)])
+          PC_2 <- c(PC_2[1:(outliers[i]-1)], NA, PC_2[outliers[i]:length(PC_2)])
         } else {
-          scores1 <- c(scores1, NA)
-          scores2 <- c(scores2, NA)
+          PC_1 <- c(PC_1, NA)
+          PC_2 <- c(PC_2, NA)
         }
       }
     }
   } else {
     cat('Not enough genes to remove even 1 loci, use different outlier_fraction', '\n')
-    scores1 <- PCA$scores[,1]
-    scores2 <- PCA$scores[,2]
+    PC_1 <- PCA$scores[,1]
+    PC_2 <- PCA$scores[,2]
   }
 } else {
-  scores1 <- PCA$scores[,1]
-  scores2 <- PCA$scores[,2]
+  PC_1 <- PCA$scores[,1]
+  PC_2 <- PCA$scores[,2]
 }
 
-variables$PC_1 <- scores1
-variables$PC_2 <- scores2
+variables = cbind(variables, PC_1, PC_2)
 if(any(is.na(variables))) variables <- variables[which(complete.cases(variables)),]
+
+if(n_genes == 'all') {
+  n_genes <- nrow(partitions)
+  cut <- 'no_cut'
+} else {
+  cut <- 'cut'
+}
 
 #C) Attempt to find usefulness axis automatically----------------------------------------------------
 
@@ -365,7 +402,7 @@ sorted_trees <- sorted_trees[1:n_genes]
 write.phyDat(as.phyDat(sorted_data), file = paste0(getwd(), '/sorted_alignment_', n_genes, 'genes.fa'), format = 'fasta')
 partitions_tosave = paste0(sorted_names, variables_sorted$genes[1:n_genes], ' = ', sorted_partitions$Start, '-', sorted_partitions$End)
 write(partitions_tosave, file = paste0(getwd(), '/sorted_alignment_', n_genes, 'genes.txt'))
-write.tree(sorted_trees, file = paste0(getwd(), '/sorted_trees_', n_genes, 'genes.txt'))
+write.tree(sorted_trees, file = paste0(getwd(), '/sorted_trees_', n_genes, 'genes.tre'))
 
 #E) Optional: visualize some sorting results
 variables_to_plot <- data.frame(gene = rep(variables_sorted$genes, ncol(PCA$loadings)),
@@ -374,43 +411,20 @@ variables_to_plot <- data.frame(gene = rep(variables_sorted$genes, ncol(PCA$load
                                pos = rep(1:nrow(variables_sorted), ncol(PCA$loadings)))
 
 order_properties <- as.character(unique(variables_to_plot$property))
+labs <- c('Root-to-tip~variance', 'Level~of~saturation', 'Comp.~heterogeneity', 'Av.~patristic~distance', 
+          'Prop.~of~variable~sites', 'Average~bootstrap', 'RF~similarity')
 
-if(nrow(partitions) == nrow(sorted_partitions)) {
+if(cut == 'no_cut') {
   ggplot(variables_to_plot, aes(x = pos, y = value, color = factor(property, levels = order_properties))) + 
-    geom_smooth() + theme_bw() + theme(legend.position = "none") + 
-    facet_wrap(vars(factor(property, levels = order_properties)), scales = 'free', nrow = 2)
+    geom_point(alpha = 0.1) + geom_smooth() + theme_bw() + theme(legend.position = "none") +  
+    facet_wrap(vars(factor(property, levels = order_properties, labels = labs)), scales = 'free', nrow = 2, 
+               labeller = label_parsed) + 
+    xlab('Sorted position') + ylab('Value')
 } else {
   ggplot(variables_to_plot, aes(x = pos, y = value, color = factor(property, levels = order_properties))) + 
-    geom_smooth() + theme_bw() + theme(legend.position = "none") + 
-    facet_wrap(vars(factor(property, levels = order_properties)), scales = 'free', nrow = 2) +
+    geom_point(alpha = 0.1) + geom_smooth() + theme_bw() + theme(legend.position = "none") +  
+    facet_wrap(vars(factor(property, levels = order_properties, labels = labs)), scales = 'free', nrow = 2, 
+               labeller = label_parsed) + 
+    xlab('Sorted position') + ylab('Value') +
     geom_vline(xintercept = n_genes, linetype = 'dashed')
-}
-
-#Other funtions-----------------------------------------------------------------------------------
-`%not in%` <- function(x, table) is.na(match(x, table, nomatch=NA_integer_))
-#function to count invariant sites
-inv <- function(x) {
-  pattern <- unique(x)
-  if(any(pattern %in% c('?'))) pattern <- pattern[-which(pattern == '?')]
-  if(any(pattern %in% c('-'))) pattern <- pattern[-which(pattern == '-')]
-  
-  if(length(pattern) == 1) {
-    invariant <- T
-  } else {
-    invariant <- F
-  }
-  return(invariant)
-}
-
-#function to remove missing data from the estimation of RCFV
-remove_empty <- function(x) {
-  if('-' %in% names(unlist(x))) {
-    missing = which(names(unlist(x)) == '-')
-    x <- x[-missing]
-  }
-  if('?' %in% names(unlist(x))) {
-    missing <- which(names(unlist(x)) == '?')
-    x <- x[-missing]
-  }
-  return(x)
 }
