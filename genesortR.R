@@ -26,6 +26,37 @@
 #phylogenetically reliable loci. bioRxiv 2021.02.13.431075.
 #https://doi.org/10.1101/2021.02.13.431075
 
+#Parameters-----------------------------------------------------------------------------------------
+#INPUT: set working directory to folder containing these four files
+setwd('')
+
+#INPUT: fill this with file names
+alignment <- ''
+partition <- ''
+species_tree <- ''
+gene_trees <- ''
+
+#INPUT: is the alignment 'DNA' or 'AA'
+type <- 'AA'
+
+#INPUT: provide the names of two terminals that bracket the ingroup, i.e., one
+#decendant of each of the two main clades of the ingroup
+ingroup <- c('', '')
+
+#INPUT: do not even consider genes with less than 'threshold' ingroup taxa. 
+#If threshold == 'auto' then it is automatically set to more than 10% of the
+#ingroup terminals (if the dataset is small, a larger value is probably
+#desirable)
+threshold <- 'auto'
+
+#INPUT: activate/deactivate outlier gene removal (recommended)
+remove_outliers <- T
+outlier_fraction <- 0.01 #i.e. 1%
+
+##INPUT: Desired number of genes to retain
+#if n_genes == 'all' then the dataset is sorted but not subsampled
+n_genes <- 'all'
+
 #Install and load packages-------------------------------------------------------------------------
 packages <- c('ape','phytools','phangorn','tibble','dplyr','tidyr','adephylo','ggplot2')
 new_packages <- packages[!packages %in% installed.packages()[,'Package']]
@@ -68,37 +99,6 @@ remove_empty <- function(x) {
   }
   return(x)
 }
-
-#Parameters-----------------------------------------------------------------------------------------
-#INPUT: set working directory to folder containing these four files
-setwd('')
-
-#INPUT: fill this with file names
-alignment <- ''
-partition <- ''
-species_tree <- ''
-gene_trees <- ''
-
-#INPUT: is the alignment 'DNA' or 'AA'
-type <- 'AA'
-
-#INPUT: provide the names of two terminals that bracket the ingroup, i.e., one
-#decendant of each of the two main clades of the ingroup
-ingroup <- c('', '')
-
-#INPUT: do not even consider genes with less than 'threshold' ingroup taxa. 
-#If threshold == 'auto' then it is automatically set to more than 10% of the
-#ingroup terminals (if the dataset is small, a larger value is probably
-#desirable)
-threshold <- 'auto'
-
-#INPUT: activate/deactivate outlier gene removal (recommended)
-remove_outliers <- T
-outlier_fraction <- 0.01 #i.e. 1%
-
-##INPUT: Desired number of genes to retain
-#if n_genes == 'all' then the dataset is sorted but not subsampled
-n_genes <- 'all'
 
 #A) Prepare data-------------------------------------------------------------------------------------------------------
 data <- read.phyDat(alignment, format = 'fasta', type = type)
