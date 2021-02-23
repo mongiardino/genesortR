@@ -86,8 +86,11 @@ type <- 'AA'
 #decendant of each of the two main clades of the ingroup
 ingroup <- c('', '')
 
-#INPUT: do not even consider genes with less than 'threshold' ingroup taxa
-threshold <- 5
+#INPUT: do not even consider genes with less than 'threshold' ingroup taxa. 
+#If threshold == 'auto' then it is automatically set to more than 10% of the
+#ingroup terminals (if the dataset is small, a larger value is probably
+#desirable)
+threshold <- 'auto'
 
 #INPUT: activate/deactivate outlier gene removal (recommended)
 remove_outliers <- T
@@ -119,6 +122,10 @@ node <- getMRCA(species_tree, ingroup)
 IG <- Descendants(species_tree, node, type = 'tips')
 IG <- species_tree$tip.label[unlist(IG)]
 OG <- species_tree$tip.label[species_tree$tip.label %not in% IG]
+
+if(threshold == 'auto') {
+  threshold = ceiling(length(IG)/10)
+}
 
 #B) Estimate properties-------------------------------------------------------------------------------
 genes <- 1:length(gene_trees)
