@@ -411,7 +411,7 @@ partitions_tosave = paste0(sorted_names, variables_sorted$genes[1:n_genes], ' = 
 write(partitions_tosave, file = paste0(getwd(), '/sorted_alignment_', n_genes, 'genes.txt'))
 write.tree(sorted_trees, file = paste0(getwd(), '/sorted_trees_', n_genes, 'genes.tre'))
 
-#E) Optional: visualize some sorting results
+#E) Optional: visualize some sorting results------------------------------------------------------------------------------------
 variables_to_plot <- data.frame(gene = rep(variables_sorted$genes, ncol(PCA$loadings)),
                                value = c(as.matrix(variables_sorted[,variables_to_use])),
                                property = rep(colnames(variables_sorted[,variables_to_use]), each = nrow(variables_sorted)),
