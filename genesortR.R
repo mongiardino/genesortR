@@ -4,7 +4,7 @@
 #This script requires an alignment in FASTA format, a partition file in format
 #'geneX = 1-200', a species tree considered the best estimate of the true tree
 #(e.g., as obtained using concatenation or coalescent methods using the full
-#alignment, not that uncertain nodes can be collapsed) and file with all gene
+#alignment, note that uncertain nodes can be collapsed) and file with all gene
 #trees. Species and gene trees need to be in newick format. The order of genes
 #in the alignment must correspond to the order of gene trees order and gene tree
 #order need to match. The species tree must be rooted using outgroups.
