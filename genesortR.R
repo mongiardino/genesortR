@@ -418,20 +418,33 @@ variables_to_plot <- data.frame(gene = rep(variables_sorted$genes, ncol(PCA$load
                                pos = rep(1:nrow(variables_sorted), ncol(PCA$loadings)))
 
 order_properties <- as.character(unique(variables_to_plot$property))
-labs <- c('Root-to-tip~variance', 'Level~of~saturation', 'Comp.~heterogeneity', 'Av.~patristic~distance', 
-          'Prop.~of~variable~sites', 'Average~bootstrap', 'RF~similarity')
+labs <- c('Root-to-tip variance', 'Level of saturation', 'Comp. heterogeneity', 'Av. patristic distance', 
+          'Prop. of variable sites', 'Average bootstrap', 'RF similarity')
+colors <- c('#5F1202', '#8A2B0E', '#C75E24', '#C69E57', '#868568', '#5F7881', '#586160')
 
-if(cut == 'no_cut') {
-  ggplot(variables_to_plot, aes(x = pos, y = value, color = factor(property, levels = order_properties))) + 
-    geom_point(alpha = 0.1) + geom_smooth() + theme_bw() + theme(legend.position = "none") +  
-    facet_wrap(vars(factor(property, levels = order_properties, labels = labs)), scales = 'free', nrow = 2, 
-               labeller = label_parsed) + 
-    xlab('Sorted position') + ylab('Value')
-} else {
-  ggplot(variables_to_plot, aes(x = pos, y = value, color = factor(property, levels = order_properties))) + 
-    geom_point(alpha = 0.1) + geom_smooth() + theme_bw() + theme(legend.position = "none") +  
-    facet_wrap(vars(factor(property, levels = order_properties, labels = labs)), scales = 'free', nrow = 2, 
-               labeller = label_parsed) + 
-    xlab('Sorted position') + ylab('Value') +
-    geom_vline(xintercept = n_genes, linetype = 'dashed')
+for(i in 1:length(unique(variables_to_plot$property))) {
+  main_plot <- ggplot(subset(variables_to_plot, property == as.character(unique(variables_to_plot$property)[i])), 
+                      aes(x = pos, y = value, color = property)) + geom_point(alpha = 0.2, shape=16) + geom_smooth(se = F) +
+    theme_bw() + theme(legend.position = "none") +
+    xlab('Sorted position') + ylab('Value') + scale_color_manual(values = colors[i]) + ggtitle(labs[i]) + 
+  theme(plot.title = element_text(hjust = 0.5))
+  
+  inset_plot <- ggplot(subset(variables_to_plot, property == as.character(unique(variables_to_plot$property)[i])), 
+                       aes(x = pos, y = value, color = property)) + geom_smooth(se = T) +
+    theme_bw() + theme(legend.position = "none") + theme(axis.title.x=element_blank(), axis.title.y=element_blank(), 
+                                                         axis.text.x=element_blank(), panel.grid.major = element_blank(), 
+                                                         panel.grid.minor = element_blank(), axis.ticks.x = element_blank()) + 
+                                                           scale_color_manual(values = colors[i])
+  
+  if(cut != 'no_cut') inset_plot <- inset_plot + geom_vline(xintercept = n_genes, linetype = 'dashed')
+  
+  if(i < 5) {
+    plot_with_inset <- ggdraw() + draw_plot(main_plot) + draw_plot(inset_plot, x = 0.15, y = 0.67, width = .3, height = .25)
+  } else {
+    plot_with_inset <- ggdraw() + draw_plot(main_plot) + draw_plot(inset_plot, x = 0.15, y = 0.10, width = .3, height = .25)
+  }
+  
+  assign(paste0('plot', letters[i]), plot_with_inset)
 }
+
+plot_grid(plota, plotb, plotc, plotd, plote, plotf, plotg, nrow=2)
