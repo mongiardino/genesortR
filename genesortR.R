@@ -447,4 +447,8 @@ for(i in 1:length(unique(variables_to_plot$property))) {
   assign(paste0('plot', letters[i]), plot_with_inset)
 }
 
-plot_grid(plota, plotb, plotc, plotd, plote, plotf, plotg, nrow=2)
+final_plot = plot_grid(plota, plotb, plotc, plotd, plote, plotf, plotg, nrow=2)
+
+#plot and save
+plot(final_plot)
+ggsave('sorted_figure.pdf', plot = final_plot, width = 16, height = 9, units = 'in')
