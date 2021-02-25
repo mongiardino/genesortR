@@ -58,7 +58,7 @@ outlier_fraction <- 0.01 #i.e. 1%
 n_genes <- 'all'
 
 #Install and load packages-------------------------------------------------------------------------
-packages <- c('ape','phytools','phangorn','tibble','dplyr','tidyr','adephylo','ggplot2')
+packages <- c('ape','phytools','phangorn','tibble','dplyr','tidyr','adephylo','ggplot2','cowplot')
 new_packages <- packages[!packages %in% installed.packages()[,'Package']]
 if(length(new_packages)) { install.packages(new_packages) }
 
@@ -70,6 +70,7 @@ library(tidyr)
 library(phytools)
 library(adephylo)
 library(ggplot2)
+library(cowplot)
 
 #Some necessary functions-----------------------------------------------------------------------------------
 `%not in%` <- function(x, table) is.na(match(x, table, nomatch=NA_integer_))
