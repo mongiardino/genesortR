@@ -231,7 +231,7 @@ for(i in 1:length(gene_trees)) {
 
 #gather gene properties
 variables <- data.frame(genes, root_tip_var, saturation, missing, rate, tree_length, 
-                        RCFV, av_patristic, length, occupancy, variable_sites, average_BS_support, robinson_sim)
+                        av_patristic, RCFV, length, occupancy, variable_sites, average_BS_support, robinson_sim)
 if(type == 'DNA') variables <- variables[,-which(colnames(variables) == 'RCFV')]
 
 #remove those with less than 'threshold' taxa
@@ -293,7 +293,7 @@ variables = cbind(variables, PC_1, PC_2)
 if(any(is.na(variables))) variables <- variables[which(complete.cases(variables)),]
 
 if(n_genes == 'all') {
-  n_genes <- nrow(partitions)
+  n_genes <- nrow(variables)
   cut <- 'no_cut'
 } else {
   cut <- 'cut'
@@ -323,45 +323,74 @@ if(cor.test(variables$rate, variables$PC_1)$estimate > 0.7) {
 }
 
 if(PC_rate != 'unknown') {
-  if(as.numeric(unlist(strsplit(PC_rate, '_'))[2]) == 1) {
-    PC_usefulness <- 2
-  } else {
-    PC_usefulness <- 1
-  }
-  
-  loadings_usefulness = loadings(PCA)[][,PC_usefulness]
-  if(loadings_usefulness[length(loadings_usefulness)] < 0 && loadings_usefulness[length(loadings_usefulness)-1] < 0) {
-    if(any(loadings_usefulness[1:(length(loadings_usefulness)-3)] > 0)) {
+  #is rate also usefulness?? i.e. should we choose the fastest evolving loci?
+  loadings_usefulness = loadings(PCA)[][,as.numeric(unlist(strsplit(PC_rate, '_'))[2])]
+  if(all(loadings_usefulness[(length(loadings_usefulness)-1):length(loadings_usefulness)] < 0)) {
+    if(length(which(loadings_usefulness[1:3] > 0)) >= 2) {
+      PC_usefulness <- as.numeric(unlist(strsplit(PC_rate, '_'))[2])
       direction <- 'clear'
       descending <- F
     } else {
       direction <- 'unclear'
     }
   } else {
-    if(loadings_usefulness[length(loadings_usefulness)] > 0 && loadings_usefulness[length(loadings_usefulness)-1] > 0) {
-      if(any(loadings_usefulness[1:(length(loadings_usefulness)-3)] < 0)) {
+    if(all(loadings_usefulness[(length(loadings_usefulness)-1):length(loadings_usefulness)] > 0)) {
+      if(length(which(loadings_usefulness[1:3] > 0)) <= 2) {
+        PC_usefulness <- as.numeric(unlist(strsplit(PC_rate, '_'))[2])
         direction <- 'clear'
         descending <- T
+      } else {
+        direction <- 'unclear'
       }
-      direction <- 'unclear'
-    } else {
-      direction <- 'unclear'
     }
   }
-} else {
-  direction <- 'unclear'
+  
+  #rate != usefulness, can we find usefulness??
+  if(direction == 'unclear') {
+    if(as.numeric(unlist(strsplit(PC_rate, '_'))[2]) == 1) {
+      PC_usefulness <- 2
+    } else {
+      PC_usefulness <- 1
+    }
+    
+    loadings_usefulness = loadings(PCA)[][,PC_usefulness]
+    if(loadings_usefulness[length(loadings_usefulness)] < 0 && loadings_usefulness[length(loadings_usefulness)-1] < 0) {
+      if(any(loadings_usefulness[1:(length(loadings_usefulness)-3)] > 0)) {
+        direction <- 'clear'
+        descending <- F
+        cat('A usefulness axis has been found!')
+      } else {
+        direction <- 'unclear'
+      }
+    } else {
+      if(loadings_usefulness[length(loadings_usefulness)] > 0 && loadings_usefulness[length(loadings_usefulness)-1] > 0) {
+        if(any(loadings_usefulness[1:(length(loadings_usefulness)-3)] < 0)) {
+          direction <- 'clear'
+          descending <- T
+          cat('A usefulness axis has been found!')
+        }
+        direction <- 'unclear'
+      } else {
+        direction <- 'unclear'
+      }
+    }
+  } else {
+    cat('Rate == usefulness. Proceed and loci will be sorted by rate.')
+  }
 }
 
 #D) Sort & Subsample------------------------------------------------------------------------------
-if(direction == 'unclear') {
-  cat('It is unclear how to sort the data.', '\n', 'You can the check loadings and decide manually how to proceed.', '\n',  
-      'It is also possible that this approach might not be suitable for your dataset.', '\n', 
-      'If this is the case, choose a different gene property with which to sort.', '\n')
+if(grepl('maybe', PC_rate)) {
+  cat(' There seems to be some ambiguity as to the identity of the axes.', '\n', 
+  'Proceed with caution and check PCA loadings to see if sorting is appropriate')
 }
 
-if(grepl('maybe', PC_rate)) {
-  cat('There seems to be some ambiguity as to the identity of the axes.', '\n', 
-  'Proceed with caution and check PCA loadings to see if sorting is appropriate')
+if(direction == 'unclear') {
+  cat(' It is unclear how to sort the data.', '\n', 
+      'You can the check loadings and decide manually how to proceed.', '\n', 
+      'In the absense of a clear usefulness axis my best guess is to sort loci by decreasing rates.')
+  
+  variables_sorted <- variables[order(variables[,'rate'], decreasing = F),]
 }
 
 if(direction == 'clear') {
@@ -408,7 +437,7 @@ sorted_data <- sorted_data[,1:sorted_partitions$End[n_genes]]
 sorted_trees <- sorted_trees[1:n_genes]
 
 write.phyDat(as.phyDat(sorted_data), file = paste0(getwd(), '/sorted_alignment_', n_genes, 'genes.fa'), format = 'fasta')
-partitions_tosave = paste0(sorted_names, variables_sorted$genes[1:n_genes], ' = ', sorted_partitions$Start, '-', sorted_partitions$End)
+partitions_tosave = paste0(sorted_names, ' = ', sorted_partitions$Start, '-', sorted_partitions$End)
 write(partitions_tosave, file = paste0(getwd(), '/sorted_alignment_', n_genes, 'genes.txt'))
 write.tree(sorted_trees, file = paste0(getwd(), '/sorted_trees_', n_genes, 'genes.tre'))
 
@@ -419,9 +448,15 @@ variables_to_plot <- data.frame(gene = rep(variables_sorted$genes, ncol(PCA$load
                                pos = rep(1:nrow(variables_sorted), ncol(PCA$loadings)))
 
 order_properties <- as.character(unique(variables_to_plot$property))
-labs <- c('Root-to-tip variance', 'Level of saturation', 'Comp. heterogeneity', 'Av. patristic distance', 
-          'Prop. of variable sites', 'Average bootstrap', 'RF similarity')
-colors <- c('#5F1202', '#8A2B0E', '#C75E24', '#C69E57', '#868568', '#5F7881', '#586160')
+if(type == 'DNA') {
+  labs <- c('Root-to-tip variance', 'Level of saturation', 'Av. patristic distance', 
+            'Prop. of variable sites', 'Average bootstrap', 'RF similarity')
+  colors <- c('#8A2B0E', '#C75E24', '#C69E57', '#868568', '#5F7881', '#586160')
+} else {
+  labs <- c('Root-to-tip variance', 'Level of saturation', 'Comp. heterogeneity', 'Av. patristic distance', 
+            'Prop. of variable sites', 'Average bootstrap', 'RF similarity')
+  colors <- c('#5F1202', '#8A2B0E', '#C75E24', '#C69E57', '#868568', '#5F7881', '#586160')
+}
 
 for(i in 1:length(unique(variables_to_plot$property))) {
   main_plot <- ggplot(subset(variables_to_plot, property == as.character(unique(variables_to_plot$property)[i])), 
@@ -448,7 +483,11 @@ for(i in 1:length(unique(variables_to_plot$property))) {
   assign(paste0('plot', letters[i]), plot_with_inset)
 }
 
-final_plot = plot_grid(plota, plotb, plotc, plotd, plote, plotf, plotg, nrow=2)
+if(type == 'DNA') {
+  final_plot = plot_grid(plota, plotb, plotc, plotd, plote, plotf, nrow=2)
+} else {
+  final_plot = plot_grid(plota, plotb, plotc, plotd, plote, plotf, plotg, nrow=2)
+}
 
 #plot and save
 plot(final_plot)
