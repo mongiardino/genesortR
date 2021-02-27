@@ -141,6 +141,7 @@ root_tip_var <- saturation <- missing <- av_patristic <- length <- tree_length <
 
 for(i in 1:length(gene_trees)) {
   tree <- gene_trees[[i]]
+
   #remove genes with less than 'threshold' ingroup taxa
   if(length(which(tree$tip.label %in% IG)) < threshold) next
   
@@ -357,6 +358,8 @@ if(PC_rate != 'unknown') {
       } else {
         direction <- 'unclear'
       }
+    } else {
+      direction <- 'unclear'
     }
   }
   
