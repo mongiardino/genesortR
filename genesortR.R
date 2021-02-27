@@ -40,7 +40,8 @@ gene_trees <- ''
 type <- 'AA'
 
 #INPUT: provide the names of two terminals that bracket the ingroup, i.e., one
-#decendant of each of the two main clades of the ingroup
+#decendant of each of the two main clades of the ingroup. Leave blank and 
+#properties will be claculated across the enitre tree without removing outliers
 ingroup <- c('', '')
 
 #INPUT: do not even consider genes with less than 'threshold' ingroup taxa. 
@@ -119,10 +120,14 @@ gene_trees <- read.tree(gene_trees)
 species_tree <- read.tree(species_tree)
 
 #get names of ingroup and outgroup taxa
-node <- getMRCA(species_tree, ingroup)
-IG <- Descendants(species_tree, node, type = 'tips')
-IG <- species_tree$tip.label[unlist(IG)]
-OG <- species_tree$tip.label[species_tree$tip.label %not in% IG]
+if(all(nchar(ingroup) != 0)) {
+  node <- getMRCA(species_tree, ingroup)
+  IG <- Descendants(species_tree, node, type = 'tips')
+  IG <- species_tree$tip.label[unlist(IG)]
+  OG <- species_tree$tip.label[species_tree$tip.label %not in% IG]
+} else {
+  IG <- species_tree$tip.label
+}
 
 if(threshold == 'auto') {
   threshold = ceiling(length(IG)/10)
@@ -139,22 +144,30 @@ for(i in 1:length(gene_trees)) {
   #remove genes with less than 'threshold' ingroup taxa
   if(length(which(tree$tip.label %in% IG)) < threshold) next
   
-  #if OGs are present, root with them
-  if(any(OG %in% tree$tip.label)) {
-    MRCA <- getMRCA(tree, which(tree$tip.label %in% IG))
-    tree_rooted <- root(tree, node = MRCA)
-    root_tip_var[i] <- var(dist.nodes(tree_rooted)[MRCA, which(tree_rooted$tip.label %in% IG)])
-    
-    #otherwise do midpoint rooting
-  } else {
+  #if OGs are defined and present in this tree, root with them
+  if(length(IG) != length(species_tree$tip.label)) {
+    if(any(OG %in% tree$tip.label)) {
+      MRCA <- getMRCA(tree, which(tree$tip.label %in% IG))
+      tree_rooted <- root(tree, node = MRCA)
+      root_tip_var[i] <- var(dist.nodes(tree_rooted)[MRCA, which(tree_rooted$tip.label %in% IG)])
+      
+      #after this remove the OGs from the gene tree
+      tree <- drop.tip(tree, which(tree$tip.label %in% OG))
+    }
+  } else {  #otherwise do midpoint rooting
     tree_rooted <- midpoint.root(tree)
     root_tip_var[i] <- var(dist.nodes(tree_rooted)[(length(tree_rooted$tip.label)+1),(1:length(tree_rooted$tip.label))])
   }
   
-  tree <- drop.tip(tree, which(tree$tip.label %in% OG))
   average_BS_support[i] <- mean(as.numeric(tree$node.label), na.rm = T)
   
-  this_species_tree <- drop.tip(species_tree, which(species_tree$tip.label %not in% tree$tip.label))
+  #remove taxa from species tree to match gene tree sampling
+  if(length(which(species_tree$tip.label %not in% tree$tip.label)) > 0) {
+    this_species_tree <- drop.tip(species_tree, which(species_tree$tip.label %not in% tree$tip.label))
+  } else {
+    this_species_tree <- species_tree
+  }
+  
   robinson_sim[i] <- 1 - suppressMessages(RF.dist(this_species_tree, tree, normalize = TRUE, check.labels = TRUE))
   patristic_dist <- as.matrix(distTips(tree, tips = 'all', method = 'patristic', useC = T))
   
@@ -162,7 +175,9 @@ for(i in 1:length(gene_trees)) {
   gene <- as.character(data[,partitions$Start[i]:partitions$End[i]])
   
   #remove OGs
-  gene <- gene[-which(rownames(gene) %in% OG),]
+  if(length(IG) != length(species_tree$tip.label)) {
+    gene <- gene[-which(rownames(gene) %in% OG),]
+  }
   ntax <- dim(gene)[1]
   
   #remove taxa not in tree (e.g., those with no data for this loci)
