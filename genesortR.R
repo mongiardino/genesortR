@@ -74,7 +74,7 @@ library(ggplot2)
 library(cowplot)
 
 #Some necessary functions-----------------------------------------------------------------------------------
-`%not in%` <- function(x, table) is.na(match(x, table, nomatch=NA_integer_))
+`%not in%` <- function(x, table) is.na(match(x, table, nomatch = NA_integer_))
 #function to count invariant sites
 inv <- function(x) {
   pattern <- unique(x)
@@ -92,7 +92,7 @@ inv <- function(x) {
 #function to remove missing data from the estimation of RCFV
 remove_empty <- function(x) {
   if('-' %in% names(unlist(x))) {
-    missing = which(names(unlist(x)) == '-')
+    missing <- which(names(unlist(x)) == '-')
     x <- x[-missing]
   }
   if('?' %in% names(unlist(x))) {
@@ -130,7 +130,7 @@ if(all(nchar(ingroup) != 0)) {
 }
 
 if(threshold == 'auto') {
-  threshold = ceiling(length(IG)/10)
+  threshold <- ceiling(length(IG)/10)
 }
 
 #B) Estimate properties-------------------------------------------------------------------------------
@@ -305,7 +305,7 @@ if(remove_outliers) {
   PC_2 <- PCA$scores[,2]
 }
 
-variables = cbind(variables, PC_1, PC_2)
+variables <- cbind(variables, PC_1, PC_2)
 if(any(is.na(variables))) variables <- variables[which(complete.cases(variables)),]
 
 if(n_genes == 'all') {
@@ -340,7 +340,7 @@ if(cor.test(variables$rate, variables$PC_1)$estimate > 0.7) {
 
 if(PC_rate != 'unknown') {
   #is rate also usefulness?? i.e. should we choose the fastest evolving loci?
-  loadings_usefulness = loadings(PCA)[][,as.numeric(unlist(strsplit(PC_rate, '_'))[2])]
+  loadings_usefulness <- loadings(PCA)[][,as.numeric(unlist(strsplit(PC_rate, '_'))[2])]
   if(all(loadings_usefulness[(length(loadings_usefulness)-1):length(loadings_usefulness)] < 0)) {
     if(length(which(loadings_usefulness[1:3] > 0)) >= 2) {
       PC_usefulness <- as.numeric(unlist(strsplit(PC_rate, '_'))[2])
@@ -371,7 +371,7 @@ if(PC_rate != 'unknown') {
       PC_usefulness <- 1
     }
     
-    loadings_usefulness = loadings(PCA)[][,PC_usefulness]
+    loadings_usefulness <- loadings(PCA)[][,PC_usefulness]
     if(loadings_usefulness[length(loadings_usefulness)] < 0 && loadings_usefulness[length(loadings_usefulness)-1] < 0) {
       if(any(loadings_usefulness[1:(length(loadings_usefulness)-3)] > 0)) {
         direction <- 'clear'
@@ -420,11 +420,11 @@ if(direction == 'clear') {
 
 ###WARNING: uncomment and omdify the following lines if you would like to sort
 ###and subsample by a different property, for example occupancy or RF similarity
-#variables_sorted = variables[order(variables[,'occupancy'], decreasing = T),]
-#variables_sorted = variables[order(variables[,'robinson_sim'], decreasing = T),]
+#variables_sorted <- variables[order(variables[,'occupancy'], decreasing = T),]
+#variables_sorted <- variables[order(variables[,'robinson_sim'], decreasing = T),]
 
 #sort entire dataset according to the sorting order imposed
-positions = c()
+positions <- c()
 for(j in 1:nrow(variables_sorted)) {
   positions <- c(positions, partitions$Start[variables_sorted$genes[j]]:partitions$End[variables_sorted$genes[j]])
 }
@@ -448,14 +448,14 @@ sorted_names <- names[variables_sorted$genes]
 #sort genes
 sorted_trees <- gene_trees[variables_sorted$genes]
 
-#subsample (or not if n_genes was left as = 0)
+#subsample (or not if n_genes was left == 0)
 sorted_names <- sorted_names[1:n_genes]
 sorted_partitions <- sorted_partitions[1:n_genes,]
 sorted_data <- sorted_data[,1:sorted_partitions$End[n_genes]]
 sorted_trees <- sorted_trees[1:n_genes]
 
 write.phyDat(as.phyDat(sorted_data), file = paste0(getwd(), '/sorted_alignment_', n_genes, 'genes.fa'), format = 'fasta')
-partitions_tosave = paste0(sorted_names, ' = ', sorted_partitions$Start, '-', sorted_partitions$End)
+partitions_tosave <- paste0(sorted_names, ' = ', sorted_partitions$Start, '-', sorted_partitions$End)
 write(partitions_tosave, file = paste0(getwd(), '/sorted_alignment_', n_genes, 'genes.txt'))
 write.tree(sorted_trees, file = paste0(getwd(), '/sorted_trees_', n_genes, 'genes.tre'))
 
@@ -478,15 +478,15 @@ if(type == 'DNA') {
 
 for(i in 1:length(unique(variables_to_plot$property))) {
   main_plot <- ggplot(subset(variables_to_plot, property == as.character(unique(variables_to_plot$property)[i])), 
-                      aes(x = pos, y = value, color = property)) + geom_point(alpha = 0.2, shape=16) + geom_smooth(se = F) +
+                      aes(x = pos, y = value, color = property)) + geom_point(alpha = 0.2, shape = 16) + geom_smooth(se = F) +
     theme_bw() + theme(legend.position = "none") +
     xlab('Sorted position') + ylab('Value') + scale_color_manual(values = colors[i]) + ggtitle(labs[i]) + 
   theme(plot.title = element_text(hjust = 0.5))
   
   inset_plot <- ggplot(subset(variables_to_plot, property == as.character(unique(variables_to_plot$property)[i])), 
                        aes(x = pos, y = value, color = property)) + geom_smooth(se = T) +
-    theme_bw() + theme(legend.position = "none") + theme(axis.title.x=element_blank(), axis.title.y=element_blank(), 
-                                                         axis.text.x=element_blank(), panel.grid.major = element_blank(), 
+    theme_bw() + theme(legend.position = "none") + theme(axis.title.x = element_blank(), axis.title.y = element_blank(), 
+                                                         axis.text.x = element_blank(), panel.grid.major = element_blank(), 
                                                          panel.grid.minor = element_blank(), axis.ticks.x = element_blank()) + 
                                                            scale_color_manual(values = colors[i])
   
@@ -502,9 +502,9 @@ for(i in 1:length(unique(variables_to_plot$property))) {
 }
 
 if(type == 'DNA') {
-  final_plot = plot_grid(plota, plotb, plotc, plotd, plote, plotf, nrow=2)
+  final_plot <- plot_grid(plota, plotb, plotc, plotd, plote, plotf, nrow = 2)
 } else {
-  final_plot = plot_grid(plota, plotb, plotc, plotd, plote, plotf, plotg, nrow=2)
+  final_plot <- plot_grid(plota, plotb, plotc, plotd, plote, plotf, plotg, nrow = 2)
 }
 
 #plot and save
