@@ -310,9 +310,9 @@ if(any(is.na(variables))) variables <- variables[which(complete.cases(variables)
 
 if(n_genes == 'all') {
   n_genes <- nrow(variables)
-  cut <- 'no_cut'
+  cut <- F
 } else {
-  cut <- 'cut'
+  cut <- T
 }
 
 #C) Attempt to find usefulness axis automatically----------------------------------------------------
@@ -490,7 +490,7 @@ for(i in 1:length(unique(variables_to_plot$property))) {
                                                          panel.grid.minor = element_blank(), axis.ticks.x = element_blank()) + 
                                                            scale_color_manual(values = colors[i])
   
-  if(cut != 'no_cut') inset_plot <- inset_plot + geom_vline(xintercept = n_genes, linetype = 'dashed')
+  if(cut) inset_plot <- inset_plot + geom_vline(xintercept = n_genes, linetype = 'dashed')
   
   if(i < 5) {
     plot_with_inset <- ggdraw() + draw_plot(main_plot) + draw_plot(inset_plot, x = 0.15, y = 0.67, width = .3, height = .25)
