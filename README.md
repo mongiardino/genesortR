@@ -18,7 +18,7 @@ The script requires some editing to define a number of input parameters:
 * ```threshold```: A threshold of number of ingroup taxa (i.e., a level of occupancy within the ingroup) to even consider the loci. If left as default (i.e., 'auto'), then this is set to 10% of the ingroup, otherwise it can be modified to a specific number of taxa.
 * ```remove_outliers```: A logical value stating whether to activate the removal of outlier loci (recommended if the dataset is composed of hundreds of loci or more). This will discard a fraction of loci (defined using ```outlier_fraction```) that exhibit the largest Mahalanobis distance in PC space, and which may suffer from problems in orthology inference, alignment, etc. Even if no issue can be detected with these loci, their pattern of correlation between gene properties deviates markedly from that of all others, indicating unusual evolutionary histories (e.g. driven by strong selective pressures) and it is unlikely that small datasets will benefit from their inclusion. The PCA is then repeated after their exclusion.
 * ```n_genes```: A final number of genes to retain. If left as defualt (i.e., 'all') then the data is sorted but not subsampled, and all loci are saved to output files. If the objective is to subsample the dataset, modify to a desired number of loci in the final dataset.<br/><br/>
-**WARNING: Taxon names need to match across all files, and that loci need to be ordered in the same way in the alignment and gene tree files.**
+**WARNING: Taxon names need to match across all files, and loci need to be ordered in the same way in the alignment and gene tree files.**
 <br/><br/><br/>
 
 ![sorting_example](https://github.com/mongiardino/genesortR/blob/main/images/sorting_example.jpeg)
