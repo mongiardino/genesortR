@@ -205,7 +205,7 @@ for(i in 1:length(gene_trees)) {
   patristic_dist <- patristic_dist[lower.tri(patristic_dist)]
   av_patristic[i] <- mean(patristic_dist)
   saturation[i] <- 1 - lm(p_dist ~ patristic_dist)$coefficients[[2]]
-  if(saturation[i] < 0) saturation[i] <- 0
+  if(saturation[i] > 1) saturation[i] <- 1
   
   #if sequence is made of AA, calculate comp. heterogeneity
   if(type == 'AA') {
