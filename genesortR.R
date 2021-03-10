@@ -257,7 +257,7 @@ if(length(useless) > 0) {
 }
 
 #Select gene properties for PCA (RCFV is only included if type == 'AA)
-variables_to_use <- which(colnames(variables) %in% c('root_tip_var', 'saturation', 'RCFV', 'av_patristic', 
+variables_to_use <- which(colnames(variables) %in% c('root_tip_var', 'saturation', 'av_patristic', 'RCFV', 
                                                      'variable_sites', 'average_BS_support', 'robinson_sim'))
 
 if(any(is.na(variables[,variables_to_use]))) {
@@ -471,7 +471,7 @@ if(type == 'DNA') {
             'Prop. of variable sites', 'Average bootstrap', 'RF similarity')
   colors <- c('#8A2B0E', '#C75E24', '#C69E57', '#868568', '#5F7881', '#586160')
 } else {
-  labs <- c('Root-to-tip variance', 'Level of saturation', 'Comp. heterogeneity', 'Av. patristic distance', 
+  labs <- c('Root-to-tip variance', 'Level of saturation', 'Av. patristic distance', 'Comp. heterogeneity', 
             'Prop. of variable sites', 'Average bootstrap', 'RF similarity')
   colors <- c('#5F1202', '#8A2B0E', '#C75E24', '#C69E57', '#868568', '#5F7881', '#586160')
 }
