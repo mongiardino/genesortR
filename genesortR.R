@@ -410,7 +410,8 @@ if(grepl('maybe', PC_rate)) {
 if(direction == 'unclear') {
   cat(' It is unclear how to sort the data.', '\n', 
       'You can the check loadings and decide manually how to proceed.', '\n', 
-      'In the absense of a clear usefulness axis my best guess is to sort loci by decreasing rates.')
+      'In the absense of a clear usefulness axis my best guess is to sort by rates.', '\n', 
+      '(i.e., choose the slowest evolving genes).', '\n')
   
   variables_sorted <- variables[order(variables[,'rate'], decreasing = F),]
 }
