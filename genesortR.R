@@ -55,7 +55,7 @@ remove_outliers <- T
 outlier_fraction <- 0.01 #i.e. 1%
 
 ##INPUT: Desired number of genes to retain
-#if n_genes == 'all' then the dataset is sorted but not subsampled
+#if n_genes == 'all' then the dataset is sorted but not subsampled.
 n_genes <- 'all'
 
 #Install and load packages-------------------------------------------------------------------------
@@ -308,10 +308,14 @@ if(remove_outliers) {
 variables <- cbind(variables, PC_1, PC_2)
 if(any(is.na(variables))) variables <- variables[which(complete.cases(variables)),]
 
+#Deal with subsampling threshold
 if(n_genes == 'all') {
   n_genes <- nrow(variables)
   cut <- F
 } else {
+  if(is.character(n_genes)){
+    n_genes <- as.numeric(n_genes)
+  }
   cut <- T
 }
 
