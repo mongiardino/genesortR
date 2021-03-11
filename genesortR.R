@@ -80,6 +80,7 @@ inv <- function(x) {
   pattern <- unique(x)
   if(any(pattern %in% c('?'))) pattern <- pattern[-which(pattern == '?')]
   if(any(pattern %in% c('-'))) pattern <- pattern[-which(pattern == '-')]
+  if(any(pattern %in% c('X'))) pattern <- pattern[-which(pattern == 'X')]
   
   if(length(pattern) == 1) {
     invariant <- T
@@ -97,6 +98,10 @@ remove_empty <- function(x) {
   }
   if('?' %in% names(unlist(x))) {
     missing <- which(names(unlist(x)) == '?')
+    x <- x[-missing]
+  }
+  if('X' %in% names(unlist(x))) {
+    missing <- which(names(unlist(x)) == 'X')
     x <- x[-missing]
   }
   return(x)
@@ -188,13 +193,13 @@ for(i in 1:length(gene_trees)) {
   
   #remove entirely empty positions (might originate from prunnin OGs for
   #example)
-  all_missing <- which(apply(gene, 2, function(x) all(x %in% c('-','?'))))
+  all_missing <- which(apply(gene, 2, function(x) all(x %in% c('-','?','X'))))
   if(length(all_missing) > 0) {
     gene <- gene[,-all_missing]
   }
   
   variable_sites[i] <- 1 - length(which(apply(gene, 2, inv)))/dim(gene)[2]
-  missing[i] <- length(which(gene %in% c('-','?')))/(dim(gene)[1]*dim(gene)[2])
+  missing[i] <- length(which(gene %in% c('-','?','X')))/(dim(gene)[1]*dim(gene)[2])
   length[i] <- dim(gene)[2]
   occupancy[i] <- dim(gene)[1]/ntax
   
@@ -218,6 +223,10 @@ for(i in 1:length(gene_trees)) {
     if('?' %in% states) {
       mean_freqs <- mean_freqs[-which(states == '?')]
       states <- states[-which(states == '?')]
+    }
+    if('X' %in% states) {
+      mean_freqs <- mean_freqs[-which(states == 'X')]
+      states <- states[-which(states == 'X')]
     }
     mean_freqs <- mean_freqs/sum(mean_freqs)
     
@@ -380,7 +389,7 @@ if(PC_rate != 'unknown') {
       if(any(loadings_usefulness[1:(length(loadings_usefulness)-3)] > 0)) {
         direction <- 'clear'
         descending <- F
-        cat('A usefulness axis has been found!')
+        cat('A usefulness axis has been found!', '\n')
       } else {
         direction <- 'unclear'
       }
@@ -389,7 +398,7 @@ if(PC_rate != 'unknown') {
         if(any(loadings_usefulness[1:(length(loadings_usefulness)-3)] < 0)) {
           direction <- 'clear'
           descending <- T
-          cat('A usefulness axis has been found!')
+          cat('A usefulness axis has been found!', '\n')
         }
         direction <- 'unclear'
       } else {
@@ -397,7 +406,7 @@ if(PC_rate != 'unknown') {
       }
     }
   } else {
-    cat('Rate == usefulness. Proceed and loci will be sorted by rate.')
+    cat('Rate == usefulness. Proceed and loci will be sorted by rate.', '\n')
   }
 }
 
