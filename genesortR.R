@@ -257,7 +257,15 @@ for(i in 1:length(gene_trees)) {
 #gather gene properties
 variables <- data.frame(genes, root_tip_var, saturation, missing, rate, tree_length, 
                         av_patristic, RCFV, length, occupancy, variable_sites, average_BS_support, robinson_sim)
-if(type == 'DNA') variables <- variables[,-which(colnames(variables) == 'RCFV')]
+if(type == 'DNA') {
+  variables <- variables[,-which(colnames(variables) == 'RCFV')]
+} else {
+  if(any(is.na(variables$RCFV))) {
+    cat(' This script will soon crash, as loci and gene trees are not composed of the same taxa.', '\n', 
+        'Most likely this is due to loci and gene trees not being in the same order.', '\n', 
+        'This makes the estimation of some gene properties to fail', '\n')
+  }
+}
 
 #remove those with less than 'threshold' taxa
 useless <- which(apply(variables[,-1], 1, function(x) all(x == 0)))
