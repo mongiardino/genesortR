@@ -10,7 +10,7 @@ This approach was first used for phylogenomic subsampling by Mongiardino Koch & 
 The script requires some editing to define a number of input parameters:
 * Set the woring directory to a desired location, ideally where input files are located. This is also where output files will be written.
 * Provide names for the four data files that need to be loaded:
-  1. Data matrix: needs to be in FASTA format. Only '?' and '-' are taken to represent missing data. If missing data is represented with other symbols, consider editing the data before running the script. 
+  1. Data matrix: needs to be in FASTA format. Only '?', '-' and 'X' are taken to represent missing data. If missing data is represented with other symbols, consider editing the data before running the script. 
   2. Partition file: in format 'gene_name = start-end'.
   3. Gene trees: a single tree file in newick format with all gene trees (with node support values).
   4. Species tree: a target topology used to calculate Robinson-Foulds similarity (also in newick format). If some relationships between the sampled taxa are contentious, these can be collapsed so as not to favor any specific resolution.
