@@ -38,7 +38,7 @@ Any of these twelve properties can be directly employed for the sorting of datas
 ## Output
 The main outputs that are directly saved to file are the sorted alignment, partition file and gene tree file. If a desired number of genes is specified using the ```n_genes``` parameter, then these datasets will be subsampled as well, allowing for both concatenation and coalescent-based phylogenetic inference to be repeated with a smaller dataset. Additionally, a plot (Fig. 1) is generated showing how the seven underlying gene properties vary according to the order in which genes are placed based on their phylogenetic usefulness. This plot is also saved to file.<br/><br/><br/>
 ![sorting_example](https://github.com/mongiardino/genesortR/blob/main/images/sorting_example.jpeg)
-**Fig. 1:** Value of the seven gene properties against the order in which loci are sorted according to their phylogenetic usefulness. The dataset corresponds to the sea urchin transcriptomic dataset (2,356 loci) of Mongiardino Koch & Thompson (2020). Regression lines correspond to generalized additive models (GAM).
+**Fig. 1:** Value of the seven gene properties against the order in which loci are sorted according to their phylogenetic usefulness. Loci are from a sea urchin transcriptomic dataset (2,356 loci) of Mongiardino Koch & Thompson (2020). Regression lines correspond to generalized additive models (GAM).
 
 ## Author
 Nicolás Mongiardino Koch. Department of Earth & Planetary Sciences, Yale University.
