@@ -136,6 +136,31 @@ if(all(nchar(ingroup) != 0)) {
 
 if(threshold == 'auto') {
   threshold <- ceiling(length(IG)/10)
+  if(all(nchar(ingroup) != 0)) {
+    cat('Setting threshold to evaluate loci to', threshold, 'taxa (i.e., 10% of ingroup taxa).', '\n')
+  } else {
+    cat('Setting threshold to evaluate loci to', threshold, 'taxa (i.e., 10% of all taxa).', '\n')
+  }
+} else {
+  if(is.numeric(threshold)) {
+    if(threshold == 0) {
+      cat('Taxon threshold is disabled. All loci will be considered regardless of occupancy level.', '\n')
+    } else {
+      if(threshold < 1) {
+        threshold <- ceiling(length(IG) * threshold)
+        cat(' Threshold was expecting an integer but was provided a number < 1.', '\n', 
+            'It will be assumed that this should be taken as a fraction of ingroup taxa.', '\n')
+      } else {
+        if(all(nchar(ingroup) != 0)) {
+          cat('Loci with less than', threshold, 'ingroup will be discarded.', '\n')
+        } else {
+          cat('Loci with less than', threshold, 'taxa will be discarded.', '\n')
+        }
+      }
+    }
+  } else {
+    cat("Modify threshold parameter to either \'auto\' or an integer. This run will fail.", '\n')
+  }
 }
 
 #B) Estimate properties-------------------------------------------------------------------------------
