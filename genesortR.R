@@ -501,7 +501,7 @@ sorted_partitions <- sorted_partitions[1:n_genes,]
 sorted_data <- sorted_data[,1:sorted_partitions$End[n_genes]]
 sorted_trees <- sorted_trees[1:n_genes]
 
-write.phyDat(as.phyDat(sorted_data), file = paste0(getwd(), '/sorted_alignment_', n_genes, 'genes.fa'), format = 'fasta')
+write.phyDat(phyDat(sorted_data, type = type), file = paste0(getwd(), '/sorted_alignment_', n_genes, 'genes.fa'), format = 'fasta')
 partitions_tosave <- paste0(sorted_names, ' = ', sorted_partitions$Start, '-', sorted_partitions$End)
 write(partitions_tosave, file = paste0(getwd(), '/sorted_alignment_', n_genes, 'genes.txt'))
 write.tree(sorted_trees, file = paste0(getwd(), '/sorted_trees_', n_genes, 'genes.tre'))
