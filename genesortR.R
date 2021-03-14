@@ -525,13 +525,13 @@ if(type == 'DNA') {
 
 for(i in 1:length(unique(variables_to_plot$property))) {
   main_plot <- ggplot(subset(variables_to_plot, property == as.character(unique(variables_to_plot$property)[i])), 
-                      aes(x = pos, y = value, color = property)) + geom_point(alpha = 0.2, shape = 16) + geom_smooth(se = F) +
+                      aes(x = pos, y = value, color = property)) + geom_point(alpha = 0.2, shape = 16) + geom_smooth(method = 'gam', se = F) +
     theme_bw() + theme(legend.position = "none") +
     xlab('Sorted position') + ylab('Value') + scale_color_manual(values = colors[i]) + ggtitle(labs[i]) + 
   theme(plot.title = element_text(hjust = 0.5))
   
   inset_plot <- ggplot(subset(variables_to_plot, property == as.character(unique(variables_to_plot$property)[i])), 
-                       aes(x = pos, y = value, color = property)) + geom_smooth(se = T) +
+                       aes(x = pos, y = value, color = property)) + geom_smooth(method = 'gam', se = T) +
     theme_bw() + theme(legend.position = "none") + theme(axis.title.x = element_blank(), axis.title.y = element_blank(), 
                                                          axis.text.x = element_blank(), panel.grid.major = element_blank(), 
                                                          panel.grid.minor = element_blank(), axis.ticks.x = element_blank()) + 
@@ -540,9 +540,9 @@ for(i in 1:length(unique(variables_to_plot$property))) {
   if(cut) inset_plot <- inset_plot + geom_vline(xintercept = n_genes, linetype = 'dashed')
   
   if(i < 5) {
-    plot_with_inset <- ggdraw() + draw_plot(main_plot) + draw_plot(inset_plot, x = 0.15, y = 0.67, width = .3, height = .25)
+    plot_with_inset <- ggdraw() + suppressMessages(draw_plot(main_plot)) + suppressMessages(draw_plot(inset_plot, x = 0.15, y = 0.67, width = .3, height = .25))
   } else {
-    plot_with_inset <- ggdraw() + draw_plot(main_plot) + draw_plot(inset_plot, x = 0.15, y = 0.10, width = .3, height = .25)
+    plot_with_inset <- ggdraw() + suppressMessages(draw_plot(main_plot)) + suppressMessages(draw_plot(inset_plot, x = 0.15, y = 0.10, width = .3, height = .25))
   }
   
   assign(paste0('plot', letters[i]), plot_with_inset)
