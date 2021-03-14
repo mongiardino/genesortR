@@ -540,9 +540,11 @@ for(i in 1:length(unique(variables_to_plot$property))) {
   if(cut) inset_plot <- inset_plot + geom_vline(xintercept = n_genes, linetype = 'dashed')
   
   if(i < 5) {
-    plot_with_inset <- ggdraw() + suppressMessages(draw_plot(main_plot)) + suppressMessages(draw_plot(inset_plot, x = 0.15, y = 0.67, width = .3, height = .25))
+    plot_with_inset <- ggdraw() + suppressMessages(draw_plot(main_plot)) + 
+      suppressMessages(draw_plot(inset_plot, x = 0.15, y = 0.67, width = .3, height = .25))
   } else {
-    plot_with_inset <- ggdraw() + suppressMessages(draw_plot(main_plot)) + suppressMessages(draw_plot(inset_plot, x = 0.15, y = 0.10, width = .3, height = .25))
+    plot_with_inset <- ggdraw() + suppressMessages(draw_plot(main_plot)) + 
+      suppressMessages(draw_plot(inset_plot, x = 0.15, y = 0.10, width = .3, height = .25))
   }
   
   assign(paste0('plot', letters[i]), plot_with_inset)
