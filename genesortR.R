@@ -137,24 +137,24 @@ if(all(nchar(ingroup) != 0)) {
 if(threshold == 'auto') {
   threshold <- ceiling(length(IG)/10)
   if(all(nchar(ingroup) != 0)) {
-    cat('Setting threshold to evaluate loci to', threshold, 'taxa (i.e., 10% of ingroup taxa).', '\n')
+    cat('Setting threshold to evaluate loci to', threshold, 'taxa (i.e., 10% of ingroup taxa).\n')
   } else {
-    cat('Setting threshold to evaluate loci to', threshold, 'taxa (i.e., 10% of all taxa).', '\n')
+    cat('Setting threshold to evaluate loci to', threshold, 'taxa (i.e., 10% of all taxa).\n')
   }
 } else {
   if(is.numeric(threshold)) {
     if(threshold == 0) {
-      cat('Taxon threshold is disabled. All loci will be considered regardless of occupancy level.', '\n')
+      cat('Taxon threshold is disabled. All loci will be considered regardless of occupancy level.\n')
     } else {
       if(threshold < 1) {
         threshold <- ceiling(length(IG) * threshold)
-        cat(' Threshold was expecting an integer but was provided a number < 1.', '\n', 
-            'It will be assumed that this should be taken as a fraction of ingroup taxa.', '\n')
+        cat('Threshold was expecting an integer but was provided a number < 1.\n')
+        cat('It will be assumed that this should be taken as a fraction of ingroup taxa.\n')
       } else {
         if(all(nchar(ingroup) != 0)) {
-          cat('Loci with less than', threshold, 'ingroup will be discarded.', '\n')
+          cat('Loci with less than', threshold, 'ingroup will be discarded.\n')
         } else {
-          cat('Loci with less than', threshold, 'taxa will be discarded.', '\n')
+          cat('Loci with less than', threshold, 'taxa will be discarded.\n')
         }
       }
     }
@@ -184,6 +184,9 @@ for(i in 1:length(gene_trees)) {
       
       #after this remove the OGs from the gene tree
       tree <- drop.tip(tree, which(tree$tip.label %in% OG))
+    } else {
+      tree_rooted <- midpoint.root(tree)
+      root_tip_var[i] <- var(dist.nodes(tree_rooted)[(length(tree_rooted$tip.label)+1),(1:length(tree_rooted$tip.label))])
     }
   } else {  #otherwise do midpoint rooting
     tree_rooted <- midpoint.root(tree)
@@ -286,9 +289,9 @@ if(type == 'DNA') {
   variables <- variables[,-which(colnames(variables) == 'RCFV')]
 } else {
   if(any(is.na(variables$RCFV))) {
-    cat(' This script will soon crash, as loci and gene trees are not composed of the same taxa.', '\n', 
-        'Most likely this is due to loci and gene trees not being in the same order.', '\n', 
-        'This makes the estimation of some gene properties to fail', '\n')
+    cat('This script will soon crash, as loci and gene trees are not composed of the same taxa.\n')
+    cat('Most likely this is due to loci and gene trees not being in the same order.\n')
+    cat('This makes the estimation of some gene properties to fail\n')
   }
 }
 
@@ -303,7 +306,7 @@ variables_to_use <- which(colnames(variables) %in% c('root_tip_var', 'saturation
                                                      'variable_sites', 'average_BS_support', 'robinson_sim'))
 
 if(any(is.na(variables[,variables_to_use]))) {
-  cat('Something went wrong. Most likely the order of genes and gene trees does not match.', '\n')
+  cat('Something went wrong. Most likely the order of genes and gene trees does not match.\n')
 }
 
 #perform PCA
@@ -338,7 +341,7 @@ if(remove_outliers) {
       }
     }
   } else {
-    cat('Not enough genes to remove even 1 loci, use different outlier_fraction', '\n')
+    cat('Not enough genes to remove even 1 loci, use different outlier_fraction.\n')
     PC_1 <- PCA$scores[,1]
     PC_2 <- PCA$scores[,2]
   }
@@ -422,7 +425,7 @@ if(PC_rate != 'unknown') {
       if(any(loadings_usefulness[1:(length(loadings_usefulness)-3)] > 0)) {
         direction <- 'clear'
         descending <- F
-        cat('A usefulness axis has been found!', '\n')
+        cat('A usefulness axis has been found!\n')
       } else {
         direction <- 'unclear'
       }
@@ -431,7 +434,7 @@ if(PC_rate != 'unknown') {
         if(any(loadings_usefulness[1:(length(loadings_usefulness)-3)] < 0)) {
           direction <- 'clear'
           descending <- T
-          cat('A usefulness axis has been found!', '\n')
+          cat('A usefulness axis has been found!\n')
         }
         direction <- 'unclear'
       } else {
@@ -439,26 +442,29 @@ if(PC_rate != 'unknown') {
       }
     }
   } else {
-    cat('Rate == usefulness. Proceed and loci will be sorted by rate.', '\n')
+    cat('Rate == usefulness. Proceed and loci will be sorted by rate.\n')
   }
 }
 
 #D) Sort & Subsample------------------------------------------------------------------------------
 if(grepl('maybe', PC_rate)) {
-  cat(' There seems to be some ambiguity as to the identity of the axes.', '\n', 
-  'Proceed with caution and check PCA loadings to see if sorting is appropriate')
+  cat('There seems to be some ambiguity as to the identity of the axes.\n') 
+  cat('Proceed with caution and check PCA loadings to see if sorting is appropriate.\n')
 }
 
 if(direction == 'unclear') {
-  cat(' It is unclear how to sort the data.', '\n', 
-      'You can the check loadings and decide manually how to proceed.', '\n', 
-      'In the absense of a clear usefulness axis my best guess is to sort by rates.', '\n', 
-      '(i.e., choose the slowest evolving genes).', '\n')
+  cat('It is unclear how to sort the data.\n') 
+  cat('You can the check loadings and decide manually how to proceed.\n') 
+  cat('In the absense of a clear usefulness axis my best guess is to sort by rates.\n')
+  cat('(i.e., choose the slowest evolving genes)\n')
   
   variables_sorted <- variables[order(variables[,'rate'], decreasing = F),]
 }
 
 if(direction == 'clear') {
+  cat('Usefulness axis explains', round((PCA$sdev[PC_usefulness]^2/sum(PCA$sdev^2))*100, digits = 2), 
+      'percentage of variance\n')
+  
   usefulness_col <- grep(PC_usefulness, colnames(variables))
   
   #sort by usefulness
