@@ -40,7 +40,7 @@ gene_trees <- ''
 type <- 'AA'
 
 #INPUT: provide the names of two terminals that bracket the ingroup, i.e., one
-#decendant of each of the two main clades of the ingroup. Leave blank and 
+#descendant of each of the two main clades of the ingroup. Leave blank and 
 #properties will be claculated across the enitre tree without removing outliers
 ingroup <- c('', '')
 
@@ -57,6 +57,17 @@ outlier_fraction <- 0.01 #i.e. 1%
 ##INPUT: Desired number of genes to retain
 #if n_genes == 'all' then the dataset is sorted but not subsampled.
 n_genes <- 'all'
+
+##INPUT: Whether to incorporate Robinson-Foulds similarity in the PCA. This
+##option is available in case the relationships among the studied taxa are
+##highly uncertain, and there is concern that specifying a given topology might
+##bias results. Alternatively (and preferentially) these uncertainties can also
+##be accommodated by using a partially resolved species tree as input, for which
+##uncertain relationships have been collapsed. In that case, RF similarities
+##will not be affected by the specific resolution of uncertain nodes favored by
+##different genes. Note that even if topological_similarity is set to FALSE, a
+##species tree needs to be provided to delineate the species in the ingroup
+topological_similarity <- T
 
 #Install and load packages-------------------------------------------------------------------------
 packages <- c('ape','phytools','phangorn','tibble','dplyr','tidyr','adephylo','ggplot2','cowplot')
@@ -202,7 +213,10 @@ for(i in 1:length(gene_trees)) {
     this_species_tree <- species_tree
   }
   
-  robinson_sim[i] <- 1 - suppressMessages(RF.dist(this_species_tree, tree, normalize = TRUE, check.labels = TRUE))
+  if(topological_similarity) {
+    robinson_sim[i] <- 1 - suppressMessages(RF.dist(this_species_tree, tree, normalize = TRUE, check.labels = TRUE))
+  }
+  
   patristic_dist <- as.matrix(distTips(tree, tips = 'all', method = 'patristic', useC = T))
   
   #get gene sequence
@@ -297,6 +311,10 @@ if(type == 'DNA') {
   }
 }
 
+if(!topological_similarity) {
+  variables <- variables[,-which(colnames(variables) == 'robinson_sim')]
+}
+  
 #remove those with less than 'threshold' taxa
 useless <- which(apply(variables[,-1], 1, function(x) all(x == 0)))
 if(length(useless) > 0) {
@@ -314,6 +332,15 @@ if(any(is.na(variables[,variables_to_use]))) {
 #perform PCA
 PCA <- princomp(variables[,variables_to_use], cor = T, scores = T)
 
+column_names <- c('Gene name', 'Position in dataset', 'Root-tip var.', 
+                  'Saturation', 'Missing data', 'Evolutionary rate', 
+                  'Tree length', 'Treeness', 'Av patristic dist.',
+                  'Comp. heterogeneity', 'Alignment length', 'Occupancy', 
+                  'Prop. variable sites', 'Av. boostrap support', 
+                  'RF similarity')
+
+if(type == 'DNA') column_names <- column_names[-10]
+
 if(remove_outliers) {
   #estimate Mahalanobis distances
   maha_distances <- order(mahalanobis(PCA$scores, rep(0, length(variables_to_use)), cov(PCA$scores)), decreasing = T)
@@ -322,15 +349,10 @@ if(remove_outliers) {
     outliers <- maha_distances[1:floor(nrow(variables)*outlier_fraction)]
     outliers <- sort(outliers)
     
-    outlier_properties = data.frame(variables[outliers,])
-    outlier_properties = cbind(data.frame(names = names[outliers]), outlier_properties)
-    colnames(outlier_properties) = c('Gene name', 'Position in dataset', 'Root-tip var.', 
-                                     'Saturation', 'Missing data', 'Evolutionary rate', 
-                                     'Tree length', 'Treeness', 'Av patristic dist.',
-                                     'Comp. heterogeneity', 'Alignment length', 'Occupancy', 
-                                     'Prop. variable sites', 'Av. boostrap support', 
-                                     'RF similarity')
+    outlier_properties <- data.frame(variables[outliers,])
+    outlier_properties <- cbind(data.frame(names = names[outliers]), outlier_properties)
     
+    colnames(outlier_properties) <- column_names[1:ncol(outlier_properties)]
     write.csv(outlier_properties, file = paste0(getwd(), '/properties_outliers.csv'), row.names = F)
     
     #redo PCA
@@ -403,8 +425,10 @@ if(cor.test(variables$rate, variables$PC_1)$estimate > 0.7) {
 if(PC_rate != 'unknown') {
   #is rate also usefulness?? i.e. should we choose the fastest evolving loci?
   loadings_usefulness <- loadings(PCA)[][,as.numeric(unlist(strsplit(PC_rate, '_'))[2])]
-  if(all(loadings_usefulness[(length(loadings_usefulness)-1):length(loadings_usefulness)] < 0)) {
-    if(length(which(loadings_usefulness[1:3] > 0)) >= 2) {
+  biases <- which(names(loadings_usefulness) %in% c('root_tip_var', 'saturation', 'av_patristic', 'RCFV'))
+  signal <- which(names(loadings_usefulness) %in% c('average_BS_support', 'robinson_sim'))
+  if(all(loadings_usefulness[signal] < 0)) {
+    if(length(which(loadings_usefulness[biases] > 0)) >= 2) {
       PC_usefulness <- as.numeric(unlist(strsplit(PC_rate, '_'))[2])
       direction <- 'clear'
       descending <- F
@@ -412,8 +436,8 @@ if(PC_rate != 'unknown') {
       direction <- 'unclear'
     }
   } else {
-    if(all(loadings_usefulness[(length(loadings_usefulness)-1):length(loadings_usefulness)] > 0)) {
-      if(length(which(loadings_usefulness[1:3] > 0)) <= 2) {
+    if(all(loadings_usefulness[signal] > 0)) {
+      if(length(which(loadings_usefulness[biases] < 0)) >= 2) {
         PC_usefulness <- as.numeric(unlist(strsplit(PC_rate, '_'))[2])
         direction <- 'clear'
         descending <- T
@@ -434,8 +458,8 @@ if(PC_rate != 'unknown') {
     }
     
     loadings_usefulness <- loadings(PCA)[][,PC_usefulness]
-    if(loadings_usefulness[length(loadings_usefulness)] < 0 && loadings_usefulness[length(loadings_usefulness)-1] < 0) {
-      if(any(loadings_usefulness[1:(length(loadings_usefulness)-3)] > 0)) {
+    if(all(loadings_usefulness[signal] < 0)) {
+      if(length(which(loadings_usefulness[biases] > 0)) >= 2) {
         direction <- 'clear'
         descending <- F
         cat('A usefulness axis has been found!\n')
@@ -443,8 +467,8 @@ if(PC_rate != 'unknown') {
         direction <- 'unclear'
       }
     } else {
-      if(loadings_usefulness[length(loadings_usefulness)] > 0 && loadings_usefulness[length(loadings_usefulness)-1] > 0) {
-        if(any(loadings_usefulness[1:(length(loadings_usefulness)-3)] < 0)) {
+      if(all(loadings_usefulness[signal] > 0)) {
+        if(length(which(loadings_usefulness[biases] < 0)) >= 2) {
           direction <- 'clear'
           descending <- T
           cat('A usefulness axis has been found!\n')
@@ -486,12 +510,11 @@ if(direction == 'clear') {
 
 #output properties of the dataset
 variables_sorted_tosave = cbind(data.frame(names = names[variables_sorted$genes]), variables_sorted)
-colnames(variables_sorted_tosave) = c('Gene name', 'Position in dataset', 'Root-tip var.',
-                                      'Saturation', 'Missing data', 'Evolutionary rate',
-                                      'Tree length', 'Treeness', 'Av patristic dist.', 
-                                      'Comp. heterogeneity', 'Alignment length', 'Occupancy',
-                                      'Prop. variable sites', 'Av. boostrap support',
-                                      'RF similarity', 'PC1', 'PC2')
+if(topological_similarity) {
+  colnames(variables_sorted_tosave) = c(column_names, 'PC1', 'PC2')
+} else {
+  colnames(variables_sorted_tosave) = c(column_names[-length(column_names)], 'PC1', 'PC2')
+}
 
 write.csv(variables_sorted_tosave, file = paste0(getwd(), '/properties_sorted_dataset.csv'), row.names = F)
 
@@ -543,14 +566,27 @@ variables_to_plot <- data.frame(gene = rep(variables_sorted$genes, ncol(PCA$load
                                pos = rep(1:nrow(variables_sorted), ncol(PCA$loadings)))
 
 order_properties <- as.character(unique(variables_to_plot$property))
+
 if(type == 'DNA') {
-  labs <- c('Root-to-tip variance', 'Level of saturation', 'Av. patristic distance', 
-            'Prop. of variable sites', 'Average bootstrap', 'RF similarity')
-  colors <- c('#8A2B0E', '#C75E24', '#C69E57', '#868568', '#5F7881', '#586160')
+  if(topological_similarity) {
+    labs <- c('Root-to-tip variance', 'Level of saturation', 'Av. patristic distance', 
+              'Prop. of variable sites', 'Average bootstrap', 'RF similarity')
+    colors <- c('#8A2B0E', '#C75E24', '#C69E57', '#868568', '#5F7881', '#586160')
+  } else {
+    labs <- c('Root-to-tip variance', 'Level of saturation', 'Av. patristic distance', 
+              'Prop. of variable sites', 'Average bootstrap')
+    colors <- c('#8A2B0E', '#C75E24', '#C69E57', '#868568', '#5F7881')
+  }
 } else {
-  labs <- c('Root-to-tip variance', 'Level of saturation', 'Av. patristic distance', 'Comp. heterogeneity', 
-            'Prop. of variable sites', 'Average bootstrap', 'RF similarity')
-  colors <- c('#5F1202', '#8A2B0E', '#C75E24', '#C69E57', '#868568', '#5F7881', '#586160')
+  if(topological_similarity) {
+    labs <- c('Root-to-tip variance', 'Level of saturation', 'Av. patristic distance', 'Comp. heterogeneity', 
+              'Prop. of variable sites', 'Average bootstrap', 'RF similarity')
+    colors <- c('#5F1202', '#8A2B0E', '#C75E24', '#C69E57', '#868568', '#5F7881', '#586160')
+  } else {
+    labs <- c('Root-to-tip variance', 'Level of saturation', 'Av. patristic distance', 'Comp. heterogeneity', 
+              'Prop. of variable sites', 'Average bootstrap')
+    colors <- c('#5F1202', '#8A2B0E', '#C75E24', '#C69E57', '#868568', '#5F7881')
+  }
 }
 
 for(i in 1:length(unique(variables_to_plot$property))) {
@@ -569,7 +605,10 @@ for(i in 1:length(unique(variables_to_plot$property))) {
   
   if(cut) inset_plot <- inset_plot + geom_vline(xintercept = n_genes, linetype = 'dashed')
   
-  if(i < 5) {
+  if(length(unique(variables_to_plot$property)) == 7) second_row = 5
+  if(length(unique(variables_to_plot$property)) <= 6) second_row = 4
+  
+  if(i < second_row) {
     plot_with_inset <- ggdraw() + suppressMessages(draw_plot(main_plot)) + 
       suppressMessages(draw_plot(inset_plot, x = 0.15, y = 0.67, width = .3, height = .25))
   } else {
@@ -580,10 +619,18 @@ for(i in 1:length(unique(variables_to_plot$property))) {
   assign(paste0('plot', letters[i]), plot_with_inset)
 }
 
-if(type == 'DNA') {
-  final_plot <- plot_grid(plota, plotb, plotc, plotd, plote, plotf, nrow = 2)
+if(type == 'AA') {
+  if(topological_similarity) {
+    final_plot <- plot_grid(plota, plotb, plotc, plotd, plote, plotf, plotg, nrow = 2)
+  } else {
+    final_plot <- plot_grid(plota, plotb, plotc, plotd, plote, plotf, nrow = 2)
+  }
 } else {
-  final_plot <- plot_grid(plota, plotb, plotc, plotd, plote, plotf, plotg, nrow = 2)
+  if(topological_similarity) {
+    final_plot <- plot_grid(plota, plotb, plotc, plotd, plote, plotf, nrow = 2)
+  } else {
+    final_plot <- plot_grid(plota, plotb, plotc, plotd, plote, nrow = 2)
+  }
 }
 
 #plot and save
