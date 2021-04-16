@@ -167,7 +167,7 @@ if(threshold == 'auto') {
 genes <- 1:length(gene_trees)
 
 root_tip_var <- saturation <- missing <- av_patristic <- length <- tree_length <- occupancy <- variable_sites <- RCFV <- 
-  rate <- average_BS_support <- robinson_sim <- integer(length(gene_trees))
+  rate <- treeness <- average_BS_support <- robinson_sim <- integer(length(gene_trees))
 
 for(i in 1:length(gene_trees)) {
   tree <- gene_trees[[i]]
@@ -219,14 +219,14 @@ for(i in 1:length(gene_trees)) {
     gene <- gene[-which(rownames(gene) %not in% tree$tip.label),]
   }
   
-  #remove entirely empty positions (might originate from prunnin OGs for
+  #remove entirely empty positions (might originate from pruning OGs for
   #example)
   all_missing <- which(apply(gene, 2, function(x) all(x %in% c('-','?','X'))))
   if(length(all_missing) > 0) {
     gene <- gene[,-all_missing]
   }
   
-  variable_sites[i] <- 1 - length(which(apply(gene, 2, inv)))/dim(gene)[2]
+  variable_sites[i] <- 1 - (length(which(apply(gene, 2, inv)))/dim(gene)[2])
   missing[i] <- length(which(gene %in% c('-','?','X')))/(dim(gene)[1]*dim(gene)[2])
   length[i] <- dim(gene)[2]
   occupancy[i] <- dim(gene)[1]/ntax
@@ -239,6 +239,7 @@ for(i in 1:length(gene_trees)) {
   av_patristic[i] <- mean(patristic_dist)
   saturation[i] <- 1 - lm(p_dist ~ patristic_dist)$coefficients[[2]]
   if(saturation[i] > 1) saturation[i] <- 1
+  if(saturation[i] < 0) saturation[i] <- 0
   
   #if sequence is made of AA, calculate comp. heterogeneity
   if(type == 'AA') {
@@ -280,10 +281,11 @@ for(i in 1:length(gene_trees)) {
   
   tree_length[i] <- sum(tree$edge.length)
   rate[i] <- sum(tree$edge.length)/length(tree$tip.label)
+  treeness[i] = 1 - (sum(tree$edge.length[which(tree$edge[,2] %in% c(1:length(tree$tip.label)))])/sum(tree$edge.length))
 }
 
 #gather gene properties
-variables <- data.frame(genes, root_tip_var, saturation, missing, rate, tree_length, 
+variables <- data.frame(genes, root_tip_var, saturation, missing, rate, tree_length, treeness, 
                         av_patristic, RCFV, length, occupancy, variable_sites, average_BS_support, robinson_sim)
 if(type == 'DNA') {
   variables <- variables[,-which(colnames(variables) == 'RCFV')]
@@ -319,6 +321,17 @@ if(remove_outliers) {
     #remove the loci within the top outlier_fraction
     outliers <- maha_distances[1:floor(nrow(variables)*outlier_fraction)]
     outliers <- sort(outliers)
+    
+    outlier_properties = data.frame(variables[outliers,])
+    outlier_properties = cbind(data.frame(names = names[outliers]), outlier_properties)
+    colnames(outlier_properties) = c('Gene name', 'Position in dataset', 'Root-tip var.', 
+                                     'Saturation', 'Missing data', 'Evolutionary rate', 
+                                     'Tree length', 'Treeness', 'Av patristic dist.',
+                                     'Comp. heterogeneity', 'Alignment length', 'Occupancy', 
+                                     'Prop. variable sites', 'Av. boostrap support', 
+                                     'RF similarity')
+    
+    write.csv(outlier_properties, file = paste0(getwd(), '/properties_outliers.csv'), row.names = F)
     
     #redo PCA
     PCA <- princomp(variables[-outliers,variables_to_use], cor = T, scores = T)
@@ -470,6 +483,17 @@ if(direction == 'clear') {
   #sort by usefulness
   variables_sorted <- variables[order(variables[,usefulness_col], decreasing = descending),]
 }
+
+#output properties of the dataset
+variables_sorted_tosave = cbind(data.frame(names = names[variables_sorted$genes]), variables_sorted)
+colnames(variables_sorted_tosave) = c('Gene name', 'Position in dataset', 'Root-tip var.',
+                                      'Saturation', 'Missing data', 'Evolutionary rate',
+                                      'Tree length', 'Treeness', 'Av patristic dist.', 
+                                      'Comp. heterogeneity', 'Alignment length', 'Occupancy',
+                                      'Prop. variable sites', 'Av. boostrap support',
+                                      'RF similarity', 'PC1', 'PC2')
+
+write.csv(variables_sorted_tosave, file = paste0(getwd(), '/properties_sorted_dataset.csv'), row.names = F)
 
 ###WARNING: uncomment and omdify the following lines if you would like to sort
 ###and subsample by a different property, for example occupancy or RF similarity
