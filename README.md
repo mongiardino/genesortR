@@ -47,6 +47,7 @@ Nicolás Mongiardino Koch. Department of Earth & Planetary Sciences, Yale Univer
 Citation: Mongiardino Koch N. 2021. Phylogenomic subsampling and the search for phylogenetically reliable loci. bioRxiv 2021.02.13.431075. https://doi.org/10.1101/2021.02.13.431075.
 
 I greatly appreciate the efforts of Mansa Srivastav and Kevin Kocot in helping debug this script.
+Prashant Sharma provided useful comments and suggestions.
 
 ## References
 Kocot KM, Struck TH, Merkel J, Waits DS, Todt C, Brannock PM, Weese DA, Cannon JT, Moroz LL, Lieb B, Halanych KM. 2017. Phylogenomics of Lophotrochozoa with consideration of systematic error. Systematic Biology 66:256-282.
