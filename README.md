@@ -44,7 +44,7 @@ The main outputs that are directly saved to file are the sorted alignment, parti
 ## Author
 Nicolás Mongiardino Koch. Department of Earth & Planetary Sciences, Yale University.
 
-Citation: Mongiardino Koch N. 2021. Phylogenomic subsampling and the search for phylogenetically reliable loci. bioRxiv 2021.02.13.431075. https://doi.org/10.1101/2021.02.13.431075.
+Citation: Mongiardino Koch N. 2021. Phylogenomic subsampling and the search for phylogenetically reliable loci. Molecular Biology and Evolution, msab151, https://doi.org/10.1093/molbev/msab151
 
 I greatly appreciate the efforts of Mansa Srivastav and Kevin Kocot in helping debug this script.
 Prashant Sharma provided useful comments and suggestions.
@@ -54,7 +54,7 @@ Kocot KM, Struck TH, Merkel J, Waits DS, Todt C, Brannock PM, Weese DA, Cannon J
 
 Mongiardino Koch N, Thompson JR. 2020. A total-evidence dated phylogeny of Echinoidea combining phylogenomic and paleontological data. Systematic Biology syaa069, https://doi.org/10.1093/sysbio/syaa069.
 
-Mongiardino Koch N. 2021. Phylogenomic subsampling and the search for phylogenetically reliable loci. bioRxiv 2021.02.13.431075. https://doi.org/10.1101/2021.02.13.431075.
+Mongiardino Koch N. 2021. Phylogenomic subsampling and the search for phylogenetically reliable loci. Molecular Biology and Evolution, msab151, https://doi.org/10.1093/molbev/msab151
 
 Nesnidal MP, Helmkampf M, Bruchhaus I, Hausdorf B. 2010. Compositional heterogeneity and phylogenomic inference of metazoan relationships. Molecular Biology and Evolution 27:2095-2104.
 
