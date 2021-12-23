@@ -205,6 +205,7 @@ for(i in 1:length(gene_trees)) {
   }
   
   average_BS_support[i] <- mean(as.numeric(tree$node.label), na.rm = T)
+  if(is.nan(average_BS_support[i])) average_BS_support[i] <- 0
   
   #remove taxa from species tree to match gene tree sampling
   if(length(which(species_tree$tip.label %not in% tree$tip.label)) > 0) {
@@ -252,6 +253,7 @@ for(i in 1:length(gene_trees)) {
   patristic_dist <- patristic_dist[lower.tri(patristic_dist)]
   av_patristic[i] <- mean(patristic_dist)
   saturation[i] <- 1 - lm(p_dist ~ patristic_dist)$coefficients[[2]]
+  if(is.na(saturation[i])) saturation[i] <- 0
   if(saturation[i] > 1) saturation[i] <- 1
   if(saturation[i] < 0) saturation[i] <- 0
   
@@ -296,6 +298,7 @@ for(i in 1:length(gene_trees)) {
   tree_length[i] <- sum(tree$edge.length)
   rate[i] <- sum(tree$edge.length)/length(tree$tip.label)
   treeness[i] = 1 - (sum(tree$edge.length[which(tree$edge[,2] %in% c(1:length(tree$tip.label)))])/sum(tree$edge.length))
+  if(is.nan(treeness[i])) treeness[i] <- 0
 }
 
 #gather gene properties
