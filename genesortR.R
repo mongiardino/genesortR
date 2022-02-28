@@ -177,8 +177,10 @@ if(threshold == 'auto') {
 #B) Estimate properties-------------------------------------------------------------------------------
 genes <- 1:length(gene_trees)
 
-root_tip_var <- saturation <- missing <- av_patristic <- length <- tree_length <- occupancy <- variable_sites <- RCFV <- 
-  rate <- treeness <- average_BS_support <- robinson_sim <- integer(length(gene_trees))
+root_tip_var <- saturation <- missing <- av_patristic <- 
+  length <- tree_length <- occupancy <- variable_sites <- 
+  RCFV <- rate <- treeness <- average_BS_support <- 
+  robinson_sim <- integer(length(gene_trees))
 
 for(i in 1:length(gene_trees)) {
   tree <- gene_trees[[i]]
@@ -297,13 +299,16 @@ for(i in 1:length(gene_trees)) {
   
   tree_length[i] <- sum(tree$edge.length)
   rate[i] <- sum(tree$edge.length)/length(tree$tip.label)
-  treeness[i] = 1 - (sum(tree$edge.length[which(tree$edge[,2] %in% c(1:length(tree$tip.label)))])/sum(tree$edge.length))
+  treeness[i] <- 1 - (sum(tree$edge.length[which(tree$edge[,2] %in% c(1:length(tree$tip.label)))])/sum(tree$edge.length))
   if(is.nan(treeness[i])) treeness[i] <- 0
 }
 
 #gather gene properties
 variables <- data.frame(genes, root_tip_var, saturation, missing, rate, tree_length, treeness, 
                         av_patristic, RCFV, length, occupancy, variable_sites, average_BS_support, robinson_sim)
+
+
+
 if(type == 'DNA') {
   variables <- variables[,-which(colnames(variables) == 'RCFV')]
 } else {
@@ -512,11 +517,11 @@ if(direction == 'clear') {
 }
 
 #output properties of the dataset
-variables_sorted_tosave = cbind(data.frame(names = names[variables_sorted$genes]), variables_sorted)
+variables_sorted_tosave <- cbind(data.frame(names = names[variables_sorted$genes]), variables_sorted)
 if(topological_similarity) {
-  colnames(variables_sorted_tosave) = c(column_names, 'PC1', 'PC2')
+  colnames(variables_sorted_tosave) <- c(column_names, 'PC1', 'PC2')
 } else {
-  colnames(variables_sorted_tosave) = c(column_names[-length(column_names)], 'PC1', 'PC2')
+  colnames(variables_sorted_tosave) <- c(column_names[-length(column_names)], 'PC1', 'PC2')
 }
 
 write.csv(variables_sorted_tosave, file = paste0(getwd(), '/properties_sorted_dataset.csv'), row.names = F)
@@ -557,7 +562,9 @@ sorted_partitions <- sorted_partitions[1:n_genes,]
 sorted_data <- sorted_data[,1:sorted_partitions$End[n_genes]]
 sorted_trees <- sorted_trees[1:n_genes]
 
-write.phyDat(phyDat(sorted_data, type = type), file = paste0(getwd(), '/sorted_alignment_', n_genes, 'genes.fa'), format = 'fasta')
+write.phyDat(phyDat(sorted_data, type = type), 
+             file = paste0(getwd(), '/sorted_alignment_', 
+                           n_genes, 'genes.fa'), format = 'fasta')
 partitions_tosave <- paste0(sorted_names, ' = ', sorted_partitions$Start, '-', sorted_partitions$End)
 write(partitions_tosave, file = paste0(getwd(), '/sorted_alignment_', n_genes, 'genes.txt'))
 write.tree(sorted_trees, file = paste0(getwd(), '/sorted_trees_', n_genes, 'genes.tre'))
@@ -565,7 +572,8 @@ write.tree(sorted_trees, file = paste0(getwd(), '/sorted_trees_', n_genes, 'gene
 #E) Optional: visualize some sorting results------------------------------------------------------------------------------------
 variables_to_plot <- data.frame(gene = rep(variables_sorted$genes, ncol(PCA$loadings)),
                                value = c(as.matrix(variables_sorted[,variables_to_use])),
-                               property = rep(colnames(variables_sorted[,variables_to_use]), each = nrow(variables_sorted)),
+                               property = rep(colnames(variables_sorted[,variables_to_use]), 
+                                              each = nrow(variables_sorted)),
                                pos = rep(1:nrow(variables_sorted), ncol(PCA$loadings)))
 
 order_properties <- as.character(unique(variables_to_plot$property))
@@ -594,17 +602,19 @@ if(type == 'DNA') {
 
 for(i in 1:length(unique(variables_to_plot$property))) {
   main_plot <- ggplot(subset(variables_to_plot, property == as.character(unique(variables_to_plot$property)[i])), 
-                      aes(x = pos, y = value, color = property)) + geom_point(alpha = 0.2, shape = 16) + geom_smooth(method = 'gam', se = F) +
+                      aes(x = pos, y = value, color = property)) + 
+    geom_point(alpha = 0.2, shape = 16) + geom_smooth(method = 'gam', se = F) +
     theme_bw() + theme(legend.position = "none") +
     xlab('Sorted position') + ylab('Value') + scale_color_manual(values = colors[i]) + ggtitle(labs[i]) + 
   theme(plot.title = element_text(hjust = 0.5))
   
   inset_plot <- ggplot(subset(variables_to_plot, property == as.character(unique(variables_to_plot$property)[i])), 
                        aes(x = pos, y = value, color = property)) + geom_smooth(method = 'gam', se = T) +
-    theme_bw() + theme(legend.position = "none") + theme(axis.title.x = element_blank(), axis.title.y = element_blank(), 
-                                                         axis.text.x = element_blank(), panel.grid.major = element_blank(), 
-                                                         panel.grid.minor = element_blank(), axis.ticks.x = element_blank()) + 
-                                                           scale_color_manual(values = colors[i])
+    theme_bw() + theme(legend.position = "none") + 
+    theme(axis.title.x = element_blank(), axis.title.y = element_blank(), 
+          axis.text.x = element_blank(), panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(), axis.ticks.x = element_blank()) + 
+    scale_color_manual(values = colors[i])
   
   if(cut) inset_plot <- inset_plot + geom_vline(xintercept = n_genes, linetype = 'dashed')
   
@@ -624,18 +634,23 @@ for(i in 1:length(unique(variables_to_plot$property))) {
 
 if(type == 'AA') {
   if(topological_similarity) {
-    final_plot <- plot_grid(plota, plotb, plotc, plotd, plote, plotf, plotg, nrow = 2)
+    final_plot <- plot_grid(plota, plotb, plotc, plotd, 
+                            plote, plotf, plotg, nrow = 2)
   } else {
-    final_plot <- plot_grid(plota, plotb, plotc, plotd, plote, plotf, nrow = 2)
+    final_plot <- plot_grid(plota, plotb, plotc, plotd, 
+                            plote, plotf, nrow = 2)
   }
 } else {
   if(topological_similarity) {
-    final_plot <- plot_grid(plota, plotb, plotc, plotd, plote, plotf, nrow = 2)
+    final_plot <- plot_grid(plota, plotb, plotc, plotd, 
+                            plote, plotf, nrow = 2)
   } else {
-    final_plot <- plot_grid(plota, plotb, plotc, plotd, plote, nrow = 2)
+    final_plot <- plot_grid(plota, plotb, plotc, plotd, 
+                            plote, nrow = 2)
   }
 }
 
 #plot and save
 plot(final_plot)
-ggsave('sorted_figure.pdf', plot = final_plot, width = 16, height = 9, units = 'in')
+ggsave(paste0('sorted_figure_', n_genes, 'genes.pdf'), plot = final_plot, 
+       width = 16, height = 9, units = 'in')
