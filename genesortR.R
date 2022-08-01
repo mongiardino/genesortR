@@ -41,7 +41,7 @@ type <- 'AA'
 
 #INPUT: provide the names of two terminals that bracket the ingroup, i.e., one
 #descendant of each of the two main clades of the ingroup. Leave blank and 
-#properties will be claculated across the enitre tree without removing outliers
+#properties will be calculated across the entire tree without removing outliers
 ingroup <- c('', '')
 
 #INPUT: do not even consider genes with less than 'threshold' ingroup taxa. 
