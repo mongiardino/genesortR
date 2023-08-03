@@ -409,29 +409,41 @@ if(n_genes == 'all') {
 
 #C) Attempt to find usefulness axis automatically----------------------------------------------------
 
-#if correlation between PC1 and rate is high
-if(cor.test(variables$rate, variables$PC_1)$estimate > 0.7) { 
-  #and much higher (x2) than correlation between PC2 and rate
-  if(cor.test(variables$rate, variables$PC_1)$estimate > (cor.test(variables$rate, variables$PC_2)$estimate * 2)) {
-    PC_rate <- 'PC_1'
-  } else {
-    PC_rate <- 'PC_1_maybe'
-  }
-} else { #try to see if rate is captured by PC2
-  if(cor.test(variables$rate, variables$PC_2)$estimate > 0.7) { 
-    #and much higher (x2) than correlation between PC2 and rate
-    if(cor.test(variables$rate, variables$PC_2)$estimate > (cor.test(variables$rate, variables$PC_1)$estimate * 2)) {
-      PC_rate <- 'PC_2'
+#estimate correlation between PCs and rate
+corr_rate_PC1 = cor.test(variables$rate, variables$PC_1)$estimate
+corr_rate_PC2 = cor.test(variables$rate, variables$PC_2)$estimate
+
+#if one of the major PCs is rate
+if(corr_rate_PC1 > 0.7 | corr_rate_PC2 > 0.7) {
+  #if correlation between PC1 and rate is higher
+  if(corr_rate_PC1 > corr_rate_PC2) {
+    #is it really high?
+    really_high <- corr_rate_PC1 > 0.7
+    #and much higher than PC2?
+    much_higher <- corr_rate_PC1 > (corr_rate_PC2 * 2)
+    if(really_high & much_higher) {
+      PC_rate <- 'PC_1' #definitely PC1
     } else {
-      PC_rate <- 'PC_2_maybe'
+      PC_rate <- 'PC_1_maybe' #posibly PC1
     }
   } else {
-    PC_rate <- 'unknown'
+    #is it really high?
+    really_high <- corr_rate_PC2 > 0.7
+    #and much higher than PC1?
+    much_higher <- corr_rate_PC2 > (corr_rate_PC1 * 2)
+    if(really_high & much_higher) {
+      PC_rate <- 'PC_2' #definitely PC2
+    } else {
+      PC_rate <- 'PC_2_maybe' #posibly PC2
+    }
   }
+} else {
+  PC_rate <- 'unknown'
 }
 
 if(PC_rate != 'unknown') {
-  #is rate also usefulness?? i.e. should we choose the fastest evolving loci?
+  #is rate also usefulness?? 
+  #i.e. should we choose the fastest/slowest evolving loci?
   loadings_usefulness <- loadings(PCA)[][,as.numeric(unlist(strsplit(PC_rate, '_'))[2])]
   biases <- which(names(loadings_usefulness) %in% c('root_tip_var', 'saturation', 'av_patristic', 'RCFV'))
   signal <- which(names(loadings_usefulness) %in% c('average_BS_support', 'robinson_sim'))
@@ -480,9 +492,8 @@ if(PC_rate != 'unknown') {
           direction <- 'clear'
           descending <- T
           cat('A usefulness axis has been found!\n')
-        } else {
-          direction <- 'unclear'
         }
+        direction <- 'unclear'
       } else {
         direction <- 'unclear'
       }
@@ -490,6 +501,10 @@ if(PC_rate != 'unknown') {
   } else {
     cat('Rate == usefulness. Proceed and loci will be sorted by rate.\n')
   }
+} else {
+  cat('The dataset does not seem to conform to expectations.\n')
+  cat('Multivariate subsampling is not appropriate. Sorry!\n')
+  direction <- 'unclear'
 }
 
 #D) Sort & Subsample------------------------------------------------------------------------------
@@ -527,7 +542,7 @@ if(topological_similarity) {
 
 write.csv(variables_sorted_tosave, file = paste0(getwd(), '/properties_sorted_dataset.csv'), row.names = F)
 
-###WARNING: uncomment and omdify the following lines if you would like to sort
+###WARNING: uncomment and modify the following lines if you would like to sort
 ###and subsample by a different property, for example occupancy or RF similarity
 #variables_sorted <- variables[order(variables[,'occupancy'], decreasing = T),]
 #variables_sorted <- variables[order(variables[,'robinson_sim'], decreasing = T),]
