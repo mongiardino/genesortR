@@ -480,8 +480,9 @@ if(PC_rate != 'unknown') {
           direction <- 'clear'
           descending <- T
           cat('A usefulness axis has been found!\n')
+        } else {
+          direction <- 'unclear'
         }
-        direction <- 'unclear'
       } else {
         direction <- 'unclear'
       }
