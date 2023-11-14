@@ -1,4 +1,4 @@
-#Property-based multivariate phylogenomic subsampling
+#genesortR: Property-based multivariate phylogenomic subsampling
 #Written by Nicolas Mongiardino Koch 02/2021
 
 #This script requires an alignment in FASTA format, a partition file in format
