@@ -1,5 +1,5 @@
 #Property-based phylogenomic subsampling
-#Writen by Nicolas Mongiardino Koch 02/2021
+#Written by Nicolas Mongiardino Koch 02/2021
 
 #This script requires an alignment in FASTA format, a partition file in format
 #'geneX = 1-200', a species tree considered the best estimate of the true tree
