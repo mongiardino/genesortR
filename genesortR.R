@@ -70,7 +70,8 @@ n_genes <- 'all'
 topological_similarity <- T
 
 #Install and load packages-------------------------------------------------------------------------
-packages <- c('ape','phytools','phangorn','tibble','dplyr','tidyr','adephylo','ggplot2','cowplot')
+packages <- c('ape', 'phytools', 'phangorn', 'tibble', 'dplyr', 'tidyr', 
+              'adephylo', 'ggplot2', 'cowplot')
 new_packages <- packages[!packages %in% installed.packages()[,'Package']]
 if(length(new_packages)) { install.packages(new_packages) }
 
@@ -127,9 +128,11 @@ if(type == 'AA') {
 }
 
 partitions <- read.table(partition, sep = ' ')
-names <- as.character(unlist(enframe(partitions[,(which(partitions[1,] == '=') - 1)], name = NULL), use.names = F))
+names <- as.character(unlist(enframe(partitions[,(which(partitions[1,] == '=') - 1)], 
+                                     name = NULL), use.names = F))
 partitions <- enframe(partitions[,ncol(partitions)], name = NULL)
-partitions <- partitions %>% separate(value, into = c('Start', 'End'), sep = '-') %>% 
+partitions <- partitions %>% 
+  separate(value, into = c('Start', 'End'), sep = '-') %>% 
   mutate_if(is.character, as.numeric)
 
 gene_trees <- read.tree(gene_trees)
@@ -148,19 +151,23 @@ if(all(nchar(ingroup) != 0)) {
 if(threshold == 'auto') {
   threshold <- ceiling(length(IG)/10)
   if(all(nchar(ingroup) != 0)) {
-    cat('Setting threshold to evaluate loci to', threshold, 'taxa (i.e., 10% of ingroup taxa).\n')
+    cat('Setting threshold to evaluate loci to', threshold, 
+        'taxa (i.e., 10% of ingroup taxa).\n')
   } else {
-    cat('Setting threshold to evaluate loci to', threshold, 'taxa (i.e., 10% of all taxa).\n')
+    cat('Setting threshold to evaluate loci to', threshold, 
+        'taxa (i.e., 10% of all taxa).\n')
   }
 } else {
   if(is.numeric(threshold)) {
     if(threshold == 0) {
-      cat('Taxon threshold is disabled. All loci will be considered regardless of occupancy level.\n')
+      cat('Taxon threshold is disabled. All loci will be considered regardless 
+          of occupancy level.\n')
     } else {
       if(threshold < 1) {
         threshold <- ceiling(length(IG) * threshold)
         cat('Threshold was expecting an integer but was provided a number < 1.\n')
-        cat('It will be assumed that this should be taken as a fraction of ingroup taxa.\n')
+        cat('It will be assumed that this should be taken as a fraction 
+            of ingroup taxa.\n')
       } else {
         if(all(nchar(ingroup) != 0)) {
           cat('Loci with less than', threshold, 'ingroup will be discarded.\n')
@@ -170,7 +177,8 @@ if(threshold == 'auto') {
       }
     }
   } else {
-    cat("Modify threshold parameter to either \'auto\' or an integer. This run will fail.", '\n')
+    cat("Modify threshold parameter to either \'auto\' 
+        or an integer. This run will fail.", '\n')
   }
 }
 
@@ -193,17 +201,20 @@ for(i in 1:length(gene_trees)) {
     if(any(OG %in% tree$tip.label)) {
       MRCA <- getMRCA(tree, which(tree$tip.label %in% IG))
       tree_rooted <- root(tree, node = MRCA)
-      root_tip_var[i] <- var(dist.nodes(tree_rooted)[MRCA, which(tree_rooted$tip.label %in% IG)])
+      root_tip_var[i] <- var(dist.nodes(tree_rooted)[MRCA, 
+                                                     which(tree_rooted$tip.label %in% IG)])
       
       #after this remove the OGs from the gene tree
       tree <- drop.tip(tree, which(tree$tip.label %in% OG))
     } else {
       tree_rooted <- midpoint.root(tree)
-      root_tip_var[i] <- var(dist.nodes(tree_rooted)[(length(tree_rooted$tip.label)+1),(1:length(tree_rooted$tip.label))])
+      root_tip_var[i] <- var(dist.nodes(tree_rooted)[(length(tree_rooted$tip.label) + 1), 
+                                                     (1:length(tree_rooted$tip.label))])
     }
   } else {  #otherwise do midpoint rooting
     tree_rooted <- midpoint.root(tree)
-    root_tip_var[i] <- var(dist.nodes(tree_rooted)[(length(tree_rooted$tip.label)+1),(1:length(tree_rooted$tip.label))])
+    root_tip_var[i] <- var(dist.nodes(tree_rooted)[(length(tree_rooted$tip.label) + 1), 
+                                                   (1:length(tree_rooted$tip.label))])
   }
   
   average_BS_support[i] <- mean(as.numeric(tree$node.label), na.rm = T)
@@ -211,16 +222,20 @@ for(i in 1:length(gene_trees)) {
   
   #remove taxa from species tree to match gene tree sampling
   if(length(which(species_tree$tip.label %not in% tree$tip.label)) > 0) {
-    this_species_tree <- drop.tip(species_tree, which(species_tree$tip.label %not in% tree$tip.label))
+    this_species_tree <- drop.tip(species_tree, which(species_tree$tip.label %not in% 
+                                                        tree$tip.label))
   } else {
     this_species_tree <- species_tree
   }
   
   if(topological_similarity) {
-    robinson_sim[i] <- 1 - suppressMessages(RF.dist(this_species_tree, tree, normalize = TRUE, check.labels = TRUE))
+    robinson_sim[i] <- 1 - suppressMessages(RF.dist(this_species_tree, tree, 
+                                                    normalize = TRUE, 
+                                                    check.labels = TRUE))
   }
   
-  patristic_dist <- as.matrix(distTips(tree, tips = 'all', method = 'patristic', useC = T))
+  patristic_dist <- as.matrix(distTips(tree, tips = 'all', 
+                                       method = 'patristic', useC = T))
   
   #get gene sequence
   gene <- as.character(data[,partitions$Start[i]:partitions$End[i]])
@@ -243,14 +258,17 @@ for(i in 1:length(gene_trees)) {
     gene <- gene[,-all_missing]
   }
   
-  variable_sites[i] <- 1 - (length(which(apply(gene, 2, inv)))/dim(gene)[2])
-  missing[i] <- length(which(gene %in% c('-','?','X')))/(dim(gene)[1]*dim(gene)[2])
+  variable_sites[i] <- 1 - (length(which(apply(gene, 2, inv))) / dim(gene)[2])
+  missing[i] <- length(which(gene %in% c('-','?','X'))) / 
+    (dim(gene)[1]*dim(gene)[2])
   length[i] <- dim(gene)[2]
   occupancy[i] <- dim(gene)[1]/ntax
   
-  p_dist <- as.matrix(dist.hamming(as.phyDat(gene, type = type), ratio = TRUE, exclude = "pairwise"))
+  p_dist <- as.matrix(dist.hamming(as.phyDat(gene, type = type), ratio = TRUE, 
+                                   exclude = "pairwise"))
   p_dist <- p_dist[order(colnames(p_dist)),order(colnames(p_dist))]
-  patristic_dist <- patristic_dist[order(colnames(patristic_dist)),order(colnames(patristic_dist))]
+  patristic_dist <- patristic_dist[order(colnames(patristic_dist)), 
+                                   order(colnames(patristic_dist))]
   p_dist <- p_dist[lower.tri(p_dist)]
   patristic_dist <- patristic_dist[lower.tri(patristic_dist)]
   av_patristic[i] <- mean(patristic_dist)
@@ -275,7 +293,7 @@ for(i in 1:length(gene_trees)) {
       mean_freqs <- mean_freqs[-which(states == 'X')]
       states <- states[-which(states == 'X')]
     }
-    mean_freqs <- mean_freqs/sum(mean_freqs)
+    mean_freqs <- mean_freqs / sum(mean_freqs)
     
     freqs <- lapply(split(gene, seq(nrow(gene))), table)
     freqs <- lapply(freqs, remove_empty)
@@ -299,22 +317,26 @@ for(i in 1:length(gene_trees)) {
   
   tree_length[i] <- sum(tree$edge.length)
   rate[i] <- sum(tree$edge.length)/length(tree$tip.label)
-  treeness[i] <- 1 - (sum(tree$edge.length[which(tree$edge[,2] %in% c(1:length(tree$tip.label)))])/sum(tree$edge.length))
+  treeness[i] <- 1 - (sum(tree$edge.length[which(tree$edge[,2] %in% 
+                                                   c(1:length(tree$tip.label)))]) / 
+                        sum(tree$edge.length))
   if(is.nan(treeness[i])) treeness[i] <- 0
 }
 
 #gather gene properties
-variables <- data.frame(genes, root_tip_var, saturation, missing, rate, tree_length, treeness, 
-                        av_patristic, RCFV, length, occupancy, variable_sites, average_BS_support, robinson_sim)
-
-
+variables <- data.frame(genes, root_tip_var, saturation, missing, rate, 
+                        tree_length, treeness, av_patristic, RCFV, length, 
+                        occupancy, variable_sites, average_BS_support, 
+                        robinson_sim)
 
 if(type == 'DNA') {
   variables <- variables[,-which(colnames(variables) == 'RCFV')]
 } else {
   if(any(is.na(variables$RCFV))) {
-    cat('This script will soon crash, as loci and gene trees are not composed of the same taxa.\n')
-    cat('Most likely this is due to loci and gene trees not being in the same order.\n')
+    cat('This script will soon crash, as loci and gene trees 
+        are not composed of the same taxa.\n')
+    cat('Most likely this is due to loci and gene trees not 
+        being in the same order.\n')
     cat('This makes the estimation of some gene properties to fail\n')
   }
 }
@@ -322,7 +344,13 @@ if(type == 'DNA') {
 if(!topological_similarity) {
   variables <- variables[,-which(colnames(variables) == 'robinson_sim')]
 }
-  
+
+if(any(apply(variables, 2, function(x) length(unique(x))) == 1)) {
+  cat('Some requested variables were not successfully estimated.\n')
+  cat('This script will soon crash.\n')
+  cat('Maybe double check that your gene trees have support values?.\n')
+}
+
 #remove those with less than 'threshold' taxa
 useless <- which(apply(variables[,-1], 1, function(x) all(x == 0)))
 if(length(useless) > 0) {
@@ -330,11 +358,14 @@ if(length(useless) > 0) {
 }
 
 #Select gene properties for PCA (RCFV is only included if type == 'AA)
-variables_to_use <- which(colnames(variables) %in% c('root_tip_var', 'saturation', 'av_patristic', 'RCFV', 
-                                                     'variable_sites', 'average_BS_support', 'robinson_sim'))
+variables_to_use <- which(colnames(variables) %in% c('root_tip_var', 'saturation', 
+                                                     'av_patristic', 'RCFV', 
+                                                     'variable_sites', 'average_BS_support', 
+                                                     'robinson_sim'))
 
 if(any(is.na(variables[,variables_to_use]))) {
-  cat('Something went wrong. Most likely the order of genes and gene trees does not match.\n')
+  cat('Something went wrong. Most likely the order of genes 
+      and gene trees does not match.\n')
 }
 
 #perform PCA
@@ -351,17 +382,20 @@ if(type == 'DNA') column_names <- column_names[-10]
 
 if(remove_outliers) {
   #estimate Mahalanobis distances
-  maha_distances <- order(mahalanobis(PCA$scores, rep(0, length(variables_to_use)), cov(PCA$scores)), decreasing = T)
+  maha_distances <- order(mahalanobis(PCA$scores, rep(0, length(variables_to_use)), 
+                                      cov(PCA$scores)), decreasing = T)
   if(outlier_fraction >= 1/nrow(variables)) {
     #remove the loci within the top outlier_fraction
-    outliers <- maha_distances[1:floor(nrow(variables)*outlier_fraction)]
+    outliers <- maha_distances[1:floor(nrow(variables) * outlier_fraction)]
     outliers <- sort(outliers)
     
     outlier_properties <- data.frame(variables[outliers,])
-    outlier_properties <- cbind(data.frame(names = names[outliers]), outlier_properties)
+    outlier_properties <- cbind(data.frame(names = names[outliers]), 
+                                outlier_properties)
     
     colnames(outlier_properties) <- column_names[1:ncol(outlier_properties)]
-    write.csv(outlier_properties, file = paste0(getwd(), '/properties_outliers.csv'), row.names = F)
+    write.csv(outlier_properties, 
+              file = paste0(getwd(), '/properties_outliers.csv'), row.names = F)
     
     #redo PCA
     PCA <- princomp(variables[-outliers,variables_to_use], cor = T, scores = T)
@@ -384,7 +418,8 @@ if(remove_outliers) {
       }
     }
   } else {
-    cat('Not enough genes to remove even 1 loci, use different outlier_fraction.\n')
+    cat('Not enough genes to remove even 1 loci, 
+        use different outlier_fraction.\n')
     PC_1 <- PCA$scores[,1]
     PC_2 <- PCA$scores[,2]
   }
@@ -444,9 +479,12 @@ if(corr_rate_PC1 > 0.7 | corr_rate_PC2 > 0.7) {
 if(PC_rate != 'unknown') {
   #is rate also usefulness?? 
   #i.e. should we choose the fastest/slowest evolving loci?
-  loadings_usefulness <- loadings(PCA)[][,as.numeric(unlist(strsplit(PC_rate, '_'))[2])]
-  biases <- which(names(loadings_usefulness) %in% c('root_tip_var', 'saturation', 'av_patristic', 'RCFV'))
-  signal <- which(names(loadings_usefulness) %in% c('average_BS_support', 'robinson_sim'))
+  loadings_usefulness <- loadings(PCA)[][,as.numeric(unlist(strsplit(PC_rate, 
+                                                                     '_'))[2])]
+  biases <- which(names(loadings_usefulness) %in% c('root_tip_var', 'saturation', 
+                                                    'av_patristic', 'RCFV'))
+  signal <- which(names(loadings_usefulness) %in% c('average_BS_support', 
+                                                    'robinson_sim'))
   if(all(loadings_usefulness[signal] < 0)) {
     if(length(which(loadings_usefulness[biases] > 0)) >= 2) {
       PC_usefulness <- as.numeric(unlist(strsplit(PC_rate, '_'))[2])
@@ -510,37 +548,45 @@ if(PC_rate != 'unknown') {
 #D) Sort & Subsample------------------------------------------------------------------------------
 if(grepl('maybe', PC_rate)) {
   cat('There seems to be some ambiguity as to the identity of the axes.\n') 
-  cat('Proceed with caution and check PCA loadings to see if sorting is appropriate.\n')
+  cat('Proceed with caution and check PCA loadings to see 
+      if sorting is appropriate.\n')
 }
 
 if(direction == 'unclear') {
   cat('It is unclear how to sort the data.\n') 
   cat('You can the check loadings and decide manually how to proceed.\n') 
-  cat('In the absense of a clear usefulness axis my best guess is to sort by rates.\n')
+  cat('In the absense of a clear usefulness axis 
+      my best guess is to sort by rates.\n')
   cat('(i.e., choose the slowest evolving genes)\n')
   
   variables_sorted <- variables[order(variables[,'rate'], decreasing = F),]
 }
 
 if(direction == 'clear') {
-  cat('Usefulness axis explains', round((PCA$sdev[PC_usefulness]^2/sum(PCA$sdev^2))*100, digits = 2), 
+  cat('Usefulness axis explains', round((PCA$sdev[PC_usefulness]^2 / 
+                                           sum(PCA$sdev^2)) * 100, digits = 2), 
       'percentage of variance\n')
   
   usefulness_col <- grep(PC_usefulness, colnames(variables))
   
   #sort by usefulness
-  variables_sorted <- variables[order(variables[,usefulness_col], decreasing = descending),]
+  variables_sorted <- variables[order(variables[,usefulness_col], 
+                                      decreasing = descending),]
 }
 
 #output properties of the dataset
-variables_sorted_tosave <- cbind(data.frame(names = names[variables_sorted$genes]), variables_sorted)
+variables_sorted_tosave <- cbind(data.frame(names = names[variables_sorted$genes]), 
+                                 variables_sorted)
 if(topological_similarity) {
   colnames(variables_sorted_tosave) <- c(column_names, 'PC1', 'PC2')
 } else {
-  colnames(variables_sorted_tosave) <- c(column_names[-length(column_names)], 'PC1', 'PC2')
+  colnames(variables_sorted_tosave) <- c(column_names[-length(column_names)], 
+                                         'PC1', 'PC2')
 }
 
-write.csv(variables_sorted_tosave, file = paste0(getwd(), '/properties_sorted_dataset.csv'), row.names = F)
+write.csv(variables_sorted_tosave, 
+          file = paste0(getwd(), '/properties_sorted_dataset.csv'), 
+          row.names = F)
 
 ###WARNING: uncomment and modify the following lines if you would like to sort
 ###and subsample by a different property, for example occupancy or RF similarity
@@ -557,11 +603,11 @@ sorted_data <- data[,positions]
 #sort partitions
 sorted_partitions <- partitions[variables_sorted$genes,]
 for(j in 1:nrow(sorted_partitions)) {
-  dif <- sorted_partitions$End[j]-sorted_partitions$Start[j]
+  dif <- sorted_partitions$End[j] - sorted_partitions$Start[j]
   if(j == 1) {
     sorted_partitions$Start[j] <- 1
   } else {
-    sorted_partitions$Start[j] <- sorted_partitions$End[j-1]+1
+    sorted_partitions$Start[j] <- sorted_partitions$End[j-1] + 1
   }
   sorted_partitions$End[j] <- sorted_partitions$Start[j]+dif
 }
@@ -581,9 +627,12 @@ sorted_trees <- sorted_trees[1:n_genes]
 write.phyDat(phyDat(sorted_data, type = type), 
              file = paste0(getwd(), '/sorted_alignment_', 
                            n_genes, 'genes.fa'), format = 'fasta')
-partitions_tosave <- paste0(sorted_names, ' = ', sorted_partitions$Start, '-', sorted_partitions$End)
-write(partitions_tosave, file = paste0(getwd(), '/sorted_alignment_', n_genes, 'genes.txt'))
-write.tree(sorted_trees, file = paste0(getwd(), '/sorted_trees_', n_genes, 'genes.tre'))
+partitions_tosave <- paste0(sorted_names, ' = ', sorted_partitions$Start, '-', 
+                            sorted_partitions$End)
+write(partitions_tosave, file = paste0(getwd(), '/sorted_alignment_', 
+                                       n_genes, 'genes.txt'))
+write.tree(sorted_trees, file = paste0(getwd(), '/sorted_trees_', 
+                                       n_genes, 'genes.tre'))
 
 #E) Optional: visualize some sorting results------------------------------------------------------------------------------------
 variables_to_plot <- data.frame(gene = rep(variables_sorted$genes, ncol(PCA$loadings)),
@@ -617,15 +666,19 @@ if(type == 'DNA') {
 }
 
 for(i in 1:length(unique(variables_to_plot$property))) {
-  main_plot <- ggplot(subset(variables_to_plot, property == as.character(unique(variables_to_plot$property)[i])), 
+  main_plot <- ggplot(subset(variables_to_plot, property == 
+                               as.character(unique(variables_to_plot$property)[i])), 
                       aes(x = pos, y = value, color = property)) + 
     geom_point(alpha = 0.2, shape = 16) + geom_smooth(method = 'gam', se = F) +
     theme_bw() + theme(legend.position = "none") +
-    xlab('Sorted position') + ylab('Value') + scale_color_manual(values = colors[i]) + ggtitle(labs[i]) + 
-  theme(plot.title = element_text(hjust = 0.5))
+    xlab('Sorted position') + ylab('Value') + 
+    scale_color_manual(values = colors[i]) + ggtitle(labs[i]) + 
+    theme(plot.title = element_text(hjust = 0.5))
   
-  inset_plot <- ggplot(subset(variables_to_plot, property == as.character(unique(variables_to_plot$property)[i])), 
-                       aes(x = pos, y = value, color = property)) + geom_smooth(method = 'gam', se = T) +
+  inset_plot <- ggplot(subset(variables_to_plot, property == 
+                                as.character(unique(variables_to_plot$property)[i])), 
+                       aes(x = pos, y = value, color = property)) + 
+    geom_smooth(method = 'gam', se = T) +
     theme_bw() + theme(legend.position = "none") + 
     theme(axis.title.x = element_blank(), axis.title.y = element_blank(), 
           axis.text.x = element_blank(), panel.grid.major = element_blank(), 
@@ -639,10 +692,12 @@ for(i in 1:length(unique(variables_to_plot$property))) {
   
   if(i < second_row) {
     plot_with_inset <- ggdraw() + suppressMessages(draw_plot(main_plot)) + 
-      suppressMessages(draw_plot(inset_plot, x = 0.15, y = 0.67, width = .3, height = .25))
+      suppressMessages(draw_plot(inset_plot, x = 0.15, y = 0.67, 
+                                 width = .3, height = .25))
   } else {
     plot_with_inset <- ggdraw() + suppressMessages(draw_plot(main_plot)) + 
-      suppressMessages(draw_plot(inset_plot, x = 0.15, y = 0.10, width = .3, height = .25))
+      suppressMessages(draw_plot(inset_plot, x = 0.15, y = 0.10, 
+                                 width = .3, height = .25))
   }
   
   assign(paste0('plot', letters[i]), plot_with_inset)
