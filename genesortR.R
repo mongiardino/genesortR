@@ -1,16 +1,16 @@
-#Property-based phylogenomic subsampling
-#Writen by Nicolas Mongiardino Koch 02/2021
+#genesortR: Property-based multivariate phylogenomic subsampling
+#Written by Nicolas Mongiardino Koch 02/2021
 
 #This script requires an alignment in FASTA format, a partition file in format
 #'geneX = 1-200', a species tree considered the best estimate of the true tree
 #(e.g., as obtained using concatenation or coalescent methods using the full
 #alignment, note that uncertain nodes can be collapsed) and a file with all gene
 #trees. Species and gene trees need to be in newick format. The order of genes
-#in the alignment must correspond to the order of gene trees order and gene tree
-#order need to match. The species tree must be rooted using outgroups.
+#in the alignment and the order of gene trees need to match. The species tree 
+#must be rooted using outgroups.
 
 #Parameters needing input are marked with 'INPUT' and are all in the first
-#section below entitled 'Parameters'
+#section below, entitled 'Parameters'.
 
 #More gene properties than the ones used to infer a usefulness axis are
 #inferred. If you would like to sort and subsample based on any of these (such
@@ -18,13 +18,13 @@
 #lines after 'WARNING'
 
 #More details can be found in the following publications:
-#1) Mongiardino Koch & Thompson (2020) - A Total-Evidence Dated Phylogeny of
-#Echinoidea Combining Phylogenomic and Paleontological Data. Syst. Biol.
-#syaa069, https://doi.org/10.1093/sysbio/syaa069
+#1) Mongiardino Koch & Thompson (2021) - A Total-Evidence Dated Phylogeny of
+#Echinoidea Combining Phylogenomic and Paleontological Data. Systematic 
+#Biology 70(3): 421–439, https://doi.org/10.1093/sysbio/syaa069.
 
 #2) Mongiardino Koch (2021) - Phylogenomic subsampling and the search for
-#phylogenetically reliable loci. bioRxiv 2021.02.13.431075.
-#https://doi.org/10.1101/2021.02.13.431075
+#phylogenetically reliable loci. Molecular Biology and Evolution 38(9): 
+#4025–4038, https://doi.org/10.1093/molbev/msab151.
 
 #Parameters-----------------------------------------------------------------------------------------
 #INPUT: set working directory to folder containing these four files
